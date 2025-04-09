@@ -1,34 +1,11 @@
-const express = require("express");
-const morgan = require("morgan");
-
+const express = require('express');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const cors = require('cors');
 
-// Middleware
+app.use(cors());
 app.use(express.json());
-app.use(morgan("dev"));
 
-// Route de test
-app.get("/", (req, res) => {
-  res.status(200).send("🎯 Le serveur Express fonctionne !");
-});
+app.use('/api', require('./api/zoran'));
+app.use('/api', require('./api/polymorphe'));
 
-// Route 404 par défaut
-app.use((req, res) => {
-  res.status(404).json({ error: "🔍 La route demandée est introuvable." });
-});
-
-// Gestion globale des erreurs
-app.use((err, req, res, next) => {
-  console.error("❗ Erreur interne :", err);
-  res.status(500).json({ error: "💥 Une erreur interne est survenue." });
-});
-
-// Lancement du serveur
-const server = app.listen(PORT, () => {
-  console.log(`✅ Serveur Express en ligne sur le port ${PORT}`);
-});
-
-server.on("error", (err) => {
-  console.error("❌ Erreur serveur :", err);
-});
+app.listen(3000, () => console.log('🧠 Serveur Prisma en ligne sur http://localhost:3000'));
