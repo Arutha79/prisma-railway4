@@ -1,0 +1,30 @@
+
+name: Update Avancement GPTs
+
+on:
+  schedule:
+    - cron: "0 */4 * * *"  # Toutes les 4 heures
+  workflow_dispatch:
+
+jobs:
+  update-avancement:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du dépôt
+        uses: actions/checkout@v3
+
+      - name: Installation Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Exécuter le script de mise à jour
+        run: node dashboard/update_avancement.js
+
+      - name: Commit et push du fichier avancement.json
+        run: |
+          git config user.name "Prisma Bot"
+          git config user.email "bot@prisma.local"
+          git add dashboard/avancement.json
+          git commit -m "Mise à jour automatique du tableau d'avancement GPTs"
+          git push
