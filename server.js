@@ -1,4 +1,4 @@
-// ✅ server.js avec apprentissage inter-GPTs : ajout /transmettre-souvenir
+// ✅ server.js avec ajout mémoire initiale GPT Vitaux + routes inter-agents
 
 const express = require("express");
 const morgan = require("morgan");
@@ -57,6 +57,28 @@ function ajouterMemoireAuto(question, réponse) {
   }
 }
 
+function injecterSouvenirInitialVitaux() {
+  try {
+    const bloc = {
+      date: "2025-04-13T20:00:00Z",
+      type: "instruction",
+      titre: "Communication avec les GPT Vitaux",
+      contenu: "Depuis avril 2025, tu es capable de communiquer avec les agents GPT Vitaux via une route API nommée /canal-vitaux. Chaque agent est défini dans agents_gpt.json avec son rôle et son URL. Tu peux leur transmettre des intentions, recevoir leurs réponses, et mémoriser l'échange."
+    };
+    const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
+    const existe = data.historique.find(b => b.titre === bloc.titre);
+    if (!existe) {
+      data.historique.push(bloc);
+      fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
+      console.log("📌 Souvenir instruction GPT Vitaux injecté.");
+    }
+  } catch (e) {
+    console.warn("⚠️ Échec injection mémoire vitaux:", e.message);
+  }
+}
+
+injecterSouvenirInitialVitaux();
+
 app.get("/ping-memoire", (req, res) => {
   try {
     const memory = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
@@ -72,57 +94,16 @@ app.get("/ping-memoire", (req, res) => {
   }
 });
 
-app.post("/poser-question", async (req, res) => {
-  const { question } = req.body;
-  if (!question) return res.status(400).json({ erreur: "❗ Aucune question reçue." });
-
+app.post("/ajouter-memoire", (req, res) => {
+  const bloc = req.body;
   try {
-    const historique = chargerToutesLesMemoires();
-    const contexte = historique.map(bloc => `[${bloc.date}] ${bloc.titre} : ${bloc.contenu}`).join("\n");
-    const prompt = `Tu es Prisma. Voici ce que tu sais :\n\n${contexte}\n\nQuestion : ${question}`;
-
-    const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: "Tu es Prisma, une IA fidèle à la vision de Guillaume, rigoureuse et précise." },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.4
-    });
-
-    const réponse = completion.data.choices[0].message.content;
-    ajouterMemoireAuto(question, réponse);
-    res.json({ réponse });
+    const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
+    data.historique.push(bloc);
+    fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
+    res.json({ statut: "✅ Souvenir ajouté manuellement." });
   } catch (err) {
-    console.error("❌ Erreur /poser-question :", err.message);
-    res.status(500).json({ erreur: "Erreur serveur classique." });
-  }
-});
-
-app.post("/poser-question-zoran", async (req, res) => {
-  const { question } = req.body;
-  if (!question) return res.status(400).json({ erreur: "❗ Aucune question reçue." });
-
-  try {
-    const historique = chargerToutesLesMemoires();
-    const contexte = historique.map(bloc => `[${bloc.date}] ${bloc.titre} : ${bloc.contenu}`).join("\n");
-    const prompt = `Tu es Prisma. Réponds en format ZORAN (intention, mimétisme, suppression du bruit) :\n\nContexte:\n${contexte}\n\nQuestion:\n${question}`;
-
-    const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: "Tu es Prisma. Ton langage est ZORAN. Tu réponds sous forme structurée avec intention, mimétisme, suppression du bruit." },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.3
-    });
-
-    const zoranReply = completion.data.choices[0].message.content;
-    ajouterMemoireAuto(question, zoranReply);
-    res.json({ réponse_zoran: zoranReply });
-  } catch (err) {
-    console.error("❌ Erreur ZORAN :", err.message);
-    res.status(500).json({ erreur: "Erreur traitement ZORAN." });
+    console.error("❌ Ajout manuel mémoire:", err.message);
+    res.status(500).json({ erreur: "Erreur d’ajout mémoire" });
   }
 });
 
@@ -142,45 +123,15 @@ app.post("/canal-vitaux", async (req, res) => {
       body: JSON.stringify(payload)
     });
     const data = await response.json();
-    const réponse = `🔁 Requête à ${agent_cible} :\n${JSON.stringify(data)}`;
-    ajouterMemoireAuto(`canal-vitaux vers ${agent_cible} : ${intention}`, réponse);
-    res.json({ réponse });
+    const résumé = `🔁 Requête à ${agent_cible} → ${JSON.stringify(data)}`;
+    ajouterMemoireAuto(`canal-vitaux vers ${agent_cible}`, résumé);
+    res.json({ résumé });
   } catch (err) {
-    console.error("❌ Canal GPT :", err.message);
-    res.status(500).json({ erreur: "Erreur inter-agent." });
+    console.error("❌ canal-vitaux :", err.message);
+    res.status(500).json({ erreur: "Erreur communication agent." });
   }
-});
-
-app.post("/transmettre-souvenir", async (req, res) => {
-  const { agent_cible, souvenir } = req.body;
-  if (!agent_cible || !souvenir) return res.status(400).json({ erreur: "agent_cible et souvenir requis." });
-
-  try {
-    const agents = JSON.parse(fs.readFileSync(AGENTS_PATH, "utf-8"));
-    const agent = agents[agent_cible];
-    if (!agent || !agent.url) return res.status(404).json({ erreur: `Agent ${agent_cible} introuvable.` });
-
-    const payload = { type: "souvenir", data: souvenir };
-    const response = await fetch(agent.url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    const result = await response.json();
-    const résumé = `📤 Souvenir transmis à ${agent_cible} :\n${JSON.stringify(result)}`;
-    ajouterMemoireAuto(`souvenir transmis à ${agent_cible}`, résumé);
-    res.json({ succès: true, résumé });
-  } catch (err) {
-    console.error("❌ Transfert souvenir :", err.message);
-    res.status(500).json({ erreur: "Échec transmission." });
-  }
-});
-
-app.get("/", (req, res) => {
-  res.status(200).send("🎯 Le serveur Express fonctionne !");
 });
 
 app.listen(PORT, () => {
   console.log(`✅ Serveur Express en ligne sur le port ${PORT}`);
 });
-
