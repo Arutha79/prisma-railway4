@@ -1,4 +1,4 @@
-// ✅ server.js optimisé pour budget limité : GPT-Zoran + résumé manuel + langage ZORAN
+// ✅ server.js complet avec toutes les routes actives pour GPTPortail
 
 const express = require("express");
 const morgan = require("morgan");
@@ -33,7 +33,7 @@ function chargerToutesLesMemoires() {
       console.warn("⚠️ Erreur lecture mémoire:", fichier, e.message);
     }
   }
-  return historiqueGlobal.slice(-100); // 🔒 limite mémoire à 100 derniers blocs
+  return historiqueGlobal.slice(-100);
 }
 
 function ajouterMemoireAuto(question, réponse) {
@@ -55,29 +55,48 @@ function ajouterMemoireAuto(question, réponse) {
   }
 }
 
-app.get("/resume-memoire", async (req, res) => {
+app.get("/ping-memoire", (req, res) => {
+  try {
+    const memory = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
+    const meta = memory.meta?.test_question || {};
+    res.json({
+      message: "✅ Mémoire Prisma accessible.",
+      question_test: meta.question || "-",
+      réponse_attendue: meta.réponse_attendue || "-"
+    });
+  } catch (err) {
+    console.error("❌ Erreur lecture mémoire:", err.message);
+    res.status(500).json({ erreur: "Échec lecture mémoire." });
+  }
+});
+
+app.post("/poser-question", async (req, res) => {
+  const { question } = req.body;
+  if (!question) {
+    return res.status(400).json({ erreur: "❗ Aucune question reçue." });
+  }
+
   try {
     const historique = chargerToutesLesMemoires();
-    const contexte = historique
-      .map((bloc) => `[${bloc.date}] ${bloc.titre} : ${bloc.contenu}`)
-      .join("\n");
+    const contexte = historique.map(bloc => `[${bloc.date}] ${bloc.titre} : ${bloc.contenu}`).join("\n");
 
-    const prompt = `Voici l'historique mémoire structuré. Résume-le en quelques phrases utiles pour Prisma :\n\n${contexte}`;
+    const prompt = `Tu es Prisma. Voici ce que tu sais :\n\n${contexte}\n\nQuestion : ${question}`;
 
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
       messages: [
-        { role: "system", content: "Tu es Prisma, une IA rigoureuse qui résume sa mémoire avec clarté." },
+        { role: "system", content: "Tu es Prisma, une IA fidèle à la vision de Guillaume, rigoureuse et précise." },
         { role: "user", content: prompt }
       ],
-      temperature: 0.5
+      temperature: 0.4
     });
 
-    const résumé = completion.data.choices[0].message.content;
-    res.json({ résumé });
+    const réponse = completion.data.choices[0].message.content;
+    ajouterMemoireAuto(question, réponse);
+    res.json({ réponse });
   } catch (err) {
-    console.error("❌ Erreur résumé mémoire :", err.message);
-    res.status(500).json({ erreur: "Échec du résumé." });
+    console.error("❌ Erreur /poser-question :", err.message);
+    res.status(500).json({ erreur: "Erreur serveur classique." });
   }
 });
 
@@ -118,3 +137,4 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Serveur Express en ligne sur le port ${PORT}`);
 });
+
