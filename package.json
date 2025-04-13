@@ -1,7 +1,7 @@
 {
   "name": "prisma-railway4",
   "version": "1.0.0",
-  "description": "Serveur Express pour Prisma",
+  "description": "Serveur Express pour Prisma sur Railway",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -13,6 +13,6 @@
     "express": "^4.18.2",
     "morgan": "^1.10.0",
     "dotenv": "^16.4.5",
-    "openai": "^4.0.0"
+    "openai": "^3.3.0"
   }
 }
