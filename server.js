@@ -1,4 +1,4 @@
-// ✅ server.js corrigé pour utiliser OPENAI_API_KEY (sans accent)
+// ✅ server.js avec route /openapi.json pour GPTPortail
 
 const express = require("express");
 const morgan = require("morgan");
@@ -23,6 +23,110 @@ app.use(morgan("dev"));
 
 app.get("/", (req, res) => {
   res.status(200).send("🎯 Le serveur Express fonctionne !");
+});
+
+// ✅ Route OpenAPI pour GPTPortail
+app.get("/openapi.json", (req, res) => {
+  res.json({
+    openapi: "3.1.0",
+    info: {
+      title: "API Prisma",
+      version: "1.0.0"
+    },
+    servers: [
+      { url: "https://web-production-6594.up.railway.app" }
+    ],
+    paths: {
+      "/ping-memoire": {
+        get: {
+          operationId: "pingMemoire",
+          summary: "Vérifie que la mémoire Prisma est active",
+          responses: {
+            "200": {
+              description: "Succès",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      message: { type: "string" },
+                      question_test: { type: "string" },
+                      réponse_attendue: { type: "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/poser-question": {
+        post: {
+          operationId: "poserQuestion",
+          summary: "Poser une question à Prisma",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    question: { type: "string" }
+                  },
+                  required: ["question"]
+                }
+              }
+            }
+          },
+          responses: {
+            "200": {
+              description: "Réponse de Prisma",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      réponse: { type: "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/ajouter-memoire": {
+        post: {
+          operationId: "ajouterMemoire",
+          summary: "Ajouter un souvenir à la mémoire de Prisma",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    date: { type: "string" },
+                    titre: { type: "string" },
+                    texte: {
+                      type: "array",
+                      items: { type: "string" }
+                    }
+                  },
+                  required: ["date", "titre", "texte"]
+                }
+              }
+            }
+          },
+          responses: {
+            "200": {
+              description: "Confirmation ajout mémoire"
+            }
+          }
+        }
+      }
+    }
+  });
 });
 
 app.post("/poser-question", async (req, res) => {
@@ -121,3 +225,4 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`✅ Serveur Express en ligne sur le port ${PORT}`);
 });
+
