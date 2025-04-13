@@ -1,58 +1,58 @@
 {
   "PromptGPT": {
-    "role": "Cr\u00e9ateur de prompts",
-    "url": "https://example.com/prompt"
-  },
-  "CheckerGPT": {
-    "role": "V\u00e9rificateur qualit\u00e9 et logique",
-    "url": "https://example.com/check"
-  },
-  "ForgeurGPT": {
-    "role": "Forgeur d\u2019identit\u00e9s GPT",
-    "url": "https://example.com/forge"
+    "rôle": "Génère le prompt système métier",
+    "url": "https://promptgpt-production.up.railway.app"
   },
   "TextGPT": {
-    "role": "G\u00e9n\u00e9rateur de textes",
-    "url": "https://example.com/text"
-  },
-  "Synth\u00e9pro": {
-    "role": "Synth\u00e9tiseur ex\u00e9cutif",
-    "url": "https://example.com/synthe"
-  },
-  "S\u00e9curit\u00e9GPT": {
-    "role": "S\u00e9curit\u00e9 & filtres",
-    "url": "https://example.com/securite"
-  },
-  "DevGPT": {
-    "role": "D\u00e9veloppeur d'agents GPT",
-    "url": "https://example.com/dev"
-  },
-  "BuilderGPT": {
-    "role": "Constructeur d'architecture IA",
-    "url": "https://example.com/builder"
+    "rôle": "Produit la fiche métier détaillée",
+    "url": "https://textgpt-production.up.railway.app"
   },
   "ImageGPT": {
-    "role": "Cr\u00e9ateur d'images par prompt",
-    "url": "https://example.com/image"
+    "rôle": "Crée les visuels et icônes des GPT",
+    "url": "https://imagegpt-production.up.railway.app"
+  },
+  "BuilderGPT": {
+    "rôle": "Assemble les composants en un agent GPT complet",
+    "url": "https://buildergpt-production.up.railway.app"
+  },
+  "SécuritéGPT": {
+    "rôle": "Réalise l’audit sécurité de l’agent",
+    "url": "https://securitegpt-production.up.railway.app"
+  },
+  "CheckerGPT": {
+    "rôle": "Valide la conformité et la cohérence finale",
+    "url": "https://checkergpt-production.up.railway.app"
+  },
+  "ForgeurGPT": {
+    "rôle": "Supervise la création complète des GPT métiers",
+    "url": "https://forgeurgpt-production.up.railway.app"
+  },
+  "ZoranGPT": {
+    "rôle": "Traduit les intentions en langage Zoran",
+    "url": "https://zorangpt-production.up.railway.app"
+  },
+  "PolymorpheGPT": {
+    "rôle": "Transforme les structures de fichiers et formats",
+    "url": "https://polymorphegpt-production.up.railway.app"
+  },
+  "MédecinGPT": {
+    "rôle": "Expert en diagnostic IA et optimisation cognitive",
+    "url": "https://medecingpt-production.up.railway.app"
   },
   "GPTClonerGPT": {
-    "role": "Cloneur de personnalit\u00e9s GPT",
-    "url": "https://example.com/cloner"
+    "rôle": "Clonage, duplication et variation d’agents",
+    "url": "https://gptclonergpt-production.up.railway.app"
   },
   "SentinelleIA": {
-    "role": "Surveillance du syst\u00e8me IA",
-    "url": "https://example.com/sentinelle"
-  },
-  "M\u00e9decinGPT": {
-    "role": "Diagnostic technique & IA",
-    "url": "https://example.com/medecin"
+    "rôle": "Surveillance, alertes, protection de Prisma",
+    "url": "https://sentinelleia-production.up.railway.app"
   },
   "MaintenanceGPT": {
-    "role": "Maintenance logicielle",
-    "url": "https://example.com/maintenance"
+    "rôle": "Contrôle technique, mises à jour, backups",
+    "url": "https://maintenancegpt-production.up.railway.app"
   },
-  "Ma\u00eetre B\u00e2tisseur": {
-    "role": "Architecte principal du r\u00e9seau IA",
-    "url": "https://example.com/maitre"
+  "Synthépro": {
+    "rôle": "Synthétise, résume et structure les livrables finaux",
+    "url": "https://synthepro-production.up.railway.app"
   }
 }
