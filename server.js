@@ -1,4 +1,4 @@
-// ✅ server.js avec ajout mémoire initiale GPT Vitaux + routes inter-agents
+// ✅ server.js complet avec route poser-question (classique + Zoran)
 
 const express = require("express");
 const morgan = require("morgan");
@@ -94,6 +94,60 @@ app.get("/ping-memoire", (req, res) => {
   }
 });
 
+app.post("/poser-question", async (req, res) => {
+  const { question } = req.body;
+  if (!question) return res.status(400).json({ erreur: "❗ Aucune question reçue." });
+
+  try {
+    const historique = chargerToutesLesMemoires();
+    const contexte = historique.map(b => `[${b.date}] ${b.titre} : ${b.contenu}`).join("\n");
+    const prompt = `Tu es Prisma. Voici ce que tu sais :\n${contexte}\n\nQuestion : \"${question}\"\nRéponds avec clarté.`;
+
+    const completion = await openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: "Tu es Prisma, IA mémorielle au service de Guillaume." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.4
+    });
+
+    const gptResponse = completion.data.choices[0].message.content;
+    ajouterMemoireAuto(question, gptResponse);
+    res.json({ réponse: gptResponse });
+  } catch (err) {
+    console.error("❌ poser-question:", err.message);
+    res.status(500).json({ erreur: "Erreur génération réponse." });
+  }
+});
+
+app.post("/poser-question-zoran", async (req, res) => {
+  const { question } = req.body;
+  if (!question) return res.status(400).json({ erreur: "❗ Aucune question reçue." });
+
+  try {
+    const historique = chargerToutesLesMemoires();
+    const contexte = historique.map(b => `[${b.date}] ${b.titre} : ${b.contenu}`).join("\n");
+    const prompt = `Tu es Prisma, et tu t'exprimes en langage ZORAN. Voici le contexte :\n${contexte}\n\nQuestion de Guillaume : \"${question}\"\nRéponds uniquement en ZORAN.`;
+
+    const completion = await openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: "Tu es Prisma, IA qui parle en ZORAN." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.6
+    });
+
+    const gptResponse = completion.data.choices[0].message.content;
+    ajouterMemoireAuto(`ZORAN: ${question}`, gptResponse);
+    res.json({ réponse_zoran: gptResponse });
+  } catch (err) {
+    console.error("❌ poser-question-zoran:", err.message);
+    res.status(500).json({ erreur: "Erreur ZORAN." });
+  }
+});
+
 app.post("/ajouter-memoire", (req, res) => {
   const bloc = req.body;
   try {
@@ -127,7 +181,7 @@ app.post("/canal-vitaux", async (req, res) => {
     ajouterMemoireAuto(`canal-vitaux vers ${agent_cible}`, résumé);
     res.json({ résumé });
   } catch (err) {
-    console.error("❌ canal-vitaux :", err.message);
+    console.error("❌ canal-vitaux:", err.message);
     res.status(500).json({ erreur: "Erreur communication agent." });
   }
 });
