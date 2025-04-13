@@ -1,4 +1,4 @@
-// ✅ server.js avec mémoire multi-fichiers et auto-enrichissement
+// ✅ server.js optimisé pour budget limité : GPT-Zoran + résumé manuel + langage ZORAN
 
 const express = require("express");
 const morgan = require("morgan");
@@ -33,7 +33,7 @@ function chargerToutesLesMemoires() {
       console.warn("⚠️ Erreur lecture mémoire:", fichier, e.message);
     }
   }
-  return historiqueGlobal;
+  return historiqueGlobal.slice(-100); // 🔒 limite mémoire à 100 derniers blocs
 }
 
 function ajouterMemoireAuto(question, réponse) {
@@ -55,185 +55,64 @@ function ajouterMemoireAuto(question, réponse) {
   }
 }
 
-app.get("/", (req, res) => {
-  res.status(200).send("🎯 Le serveur Express fonctionne !");
-});
-
-app.get("/openapi.json", (req, res) => {
-  res.json({
-    openapi: "3.1.0",
-    info: { title: "API Prisma", version: "1.0.0" },
-    servers: [{ url: "https://web-production-6594.up.railway.app" }],
-    paths: {
-      "/ping-memoire": {
-        get: {
-          operationId: "pingMemoire",
-          summary: "Vérifie que la mémoire Prisma est active",
-          responses: {
-            "200": {
-              description: "Succès",
-              content: {
-                "application/json": {
-                  schema: {
-                    type: "object",
-                    properties: {
-                      message: { type: "string" },
-                      question_test: { type: "string" },
-                      réponse_attendue: { type: "string" }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/poser-question": {
-        post: {
-          operationId: "poserQuestion",
-          summary: "Poser une question à Prisma",
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    question: { type: "string" }
-                  },
-                  required: ["question"]
-                }
-              }
-            }
-          },
-          responses: {
-            "200": {
-              description: "Réponse de Prisma",
-              content: {
-                "application/json": {
-                  schema: {
-                    type: "object",
-                    properties: {
-                      réponse: { type: "string" }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/ajouter-memoire": {
-        post: {
-          operationId: "ajouterMemoire",
-          summary: "Ajouter un souvenir à la mémoire de Prisma",
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    date: { type: "string" },
-                    titre: { type: "string" },
-                    texte: {
-                      type: "array",
-                      items: { type: "string" }
-                    }
-                  },
-                  required: ["date", "titre", "texte"]
-                }
-              }
-            }
-          },
-          responses: {
-            "200": { description: "Confirmation ajout mémoire" }
-          }
-        }
-      }
-    }
-  });
-});
-
-app.post("/poser-question", async (req, res) => {
-  const { question } = req.body;
-
-  if (!question) {
-    return res.status(400).json({ erreur: "❗ Aucune question reçue." });
-  }
-
+app.get("/resume-memoire", async (req, res) => {
   try {
     const historique = chargerToutesLesMemoires();
     const contexte = historique
       .map((bloc) => `[${bloc.date}] ${bloc.titre} : ${bloc.contenu}`)
       .join("\n");
 
-    const prompt = `
-Tu es Prisma, une IA structurée et mémorielle au service de Guillaume. Voici ce que tu sais :
-${contexte}
-
-Maintenant, voici la question de Guillaume :
-"${question}"
-
-Réponds avec rigueur, clarté et concision.
-`;
+    const prompt = `Voici l'historique mémoire structuré. Résume-le en quelques phrases utiles pour Prisma :\n\n${contexte}`;
 
     const completion = await openai.createChatCompletion({
-      model: "gpt-4",
+      model: "gpt-3.5-turbo",
       messages: [
-        { role: "system", content: "Tu es Prisma, une IA sérieuse, rigoureuse et fidèle à la vision de Guillaume." },
+        { role: "system", content: "Tu es Prisma, une IA rigoureuse qui résume sa mémoire avec clarté." },
         { role: "user", content: prompt }
       ],
-      temperature: 0.4
+      temperature: 0.5
     });
 
-    const gptResponse = completion.data.choices[0].message.content;
-    ajouterMemoireAuto(question, gptResponse);
-    res.json({ réponse: gptResponse });
+    const résumé = completion.data.choices[0].message.content;
+    res.json({ résumé });
   } catch (err) {
-    console.error("❌ Erreur GPT ou mémoire :", err.response?.data || err.message);
-    res.status(500).json({
-      erreur: `💥 Erreur serveur pendant le traitement.`,
-      détail: err.response?.data || err.message
-    });
+    console.error("❌ Erreur résumé mémoire :", err.message);
+    res.status(500).json({ erreur: "Échec du résumé." });
   }
 });
 
-app.get("/ping-memoire", (req, res) => {
+app.post("/poser-question-zoran", async (req, res) => {
+  const { question } = req.body;
+  if (!question) {
+    return res.status(400).json({ erreur: "❗ Aucune question reçue." });
+  }
+
   try {
     const historique = chargerToutesLesMemoires();
-    const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
-    res.json({
-      message: "✅ Mémoire Prisma chargée avec succès.",
-      question_test: data.meta?.test_question?.question || "-",
-      réponse_attendue: data.meta?.test_question?.réponse_attendue || "-"
+    const contexte = historique.map(bloc => `[${bloc.date}] ${bloc.titre} : ${bloc.contenu}`).join("\n");
+
+    const prompt = `Tu es Prisma. Réponds en format ZORAN (intention, mimétisme, suppression du bruit) :\n\nContexte:\n${contexte}\n\nQuestion:\n${question}`;
+
+    const completion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: "Tu es Prisma. Ton langage est ZORAN. Tu réponds sous forme structurée avec intention, mimétisme, suppression du bruit." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.3
     });
+
+    const zoranReply = completion.data.choices[0].message.content;
+    ajouterMemoireAuto(question, zoranReply);
+    res.json({ réponse_zoran: zoranReply });
   } catch (err) {
-    console.error("❌ Erreur lecture mémoire :", err.message);
-    res.status(500).json({ error: "Échec de lecture mémoire." });
+    console.error("❌ Erreur ZORAN :", err.message);
+    res.status(500).json({ erreur: "Erreur traitement ZORAN." });
   }
 });
 
-app.post("/ajouter-memoire", (req, res) => {
-  try {
-    const nouveauBloc = req.body;
-    const memory = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
-    memory.historique.push(nouveauBloc);
-    fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(memory, null, 2), "utf-8");
-    res.json({ status: "ok", message: "🧠 Bloc mémoire ajouté avec succès." });
-  } catch (err) {
-    console.error("❌ Erreur d’écriture mémoire :", err.message);
-    res.status(500).json({ error: "Échec d’ajout mémoire." });
-  }
-});
-
-app.use((req, res) => {
-  res.status(404).json({ error: "🔍 La route demandée est introuvable." });
-});
-
-app.use((err, req, res, next) => {
-  console.error("❗ Erreur interne :", err);
-  res.status(500).json({ error: "💥 Une erreur interne est survenue." });
+app.get("/", (req, res) => {
+  res.status(200).send("🎯 Le serveur Express fonctionne !");
 });
 
 app.listen(PORT, () => {
