@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const MEMORY_PATH = path.join(__dirname, "mémoire", "prisma_memory.json");
 
-// 🔐 Configuration OpenAI (clé API lue dans .env)
+// ✅ Configuration OpenAI (version 4.x)
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -23,7 +23,7 @@ app.get("/", (req, res) => {
   res.status(200).send("🎯 Le serveur Express fonctionne !");
 });
 
-// ✅ Route : poser une question (avec lecture mémoire + GPT-4)
+// ✅ Route : poser une question
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
 
@@ -65,7 +65,7 @@ Réponds avec rigueur, clarté et concision.
     const gptResponse = completion.choices[0].message.content;
     res.json({ réponse: gptResponse });
   } catch (err) {
-    console.error("❌ Erreur GPT ou lecture mémoire :", err.message);
+    console.error("❌ Erreur GPT ou mémoire :", err.message);
     res.status(500).json({ erreur: "💥 Erreur serveur pendant le traitement." });
   }
 });
@@ -102,23 +102,24 @@ app.post("/ajouter-memoire", (req, res) => {
     fs.writeFileSync(MEMORY_PATH, JSON.stringify(memory, null, 2), "utf-8");
     res.json({ status: "ok", message: "🧠 Bloc mémoire ajouté avec succès." });
   } catch (err) {
-    console.error("❌ Erreur d’écriture mémoire :", err.message);
-    res.status(500).json({ error: "Échec d’ajout mémoire." });
+    console.error("❌ Erreur écriture mémoire :", err.message);
+    res.status(500).json({ error: "Échec ajout mémoire." });
   }
 });
 
-// 🔍 Route 404
+// 🔍 404
 app.use((req, res) => {
   res.status(404).json({ error: "🔍 La route demandée est introuvable." });
 });
 
-// 💥 Gestion globale des erreurs
+// 💥 Erreurs serveur
 app.use((err, req, res, next) => {
-  console.error("❗ Erreur interne :", err);
+  console.error("❗ Erreur serveur :", err);
   res.status(500).json({ error: "💥 Une erreur interne est survenue." });
 });
 
-// 🚀 Lancement du serveur
-const server = app.listen(PORT, () => {
+// 🚀 Lancement
+app.listen(PORT, () => {
   console.log(`✅ Serveur Express en ligne sur le port ${PORT}`);
 });
+
