@@ -23,9 +23,9 @@
     "rôle": "Valide la conformité et la cohérence finale",
     "url": "https://checkergpt-production.up.railway.app"
   },
- "ForgeurGPT": {
-  "rôle": "Supervise la création des GPT métiers",
-  "url": "https://forgeurgpt-production-[code].up.railway.app"
+  "ForgeurGPT": {
+    "rôle": "Supervise la création des GPT métiers",
+    "url": "https://forgeurgpt-production.ton-suffixe-railway.app"
   },
   "ZoranGPT": {
     "rôle": "Traduit les intentions en langage Zoran",
