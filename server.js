@@ -24,7 +24,7 @@ app.get("/", (req, res) => {
   res.status(200).send("🎯 Le serveur Express fonctionne !");
 });
 
-// ✅ Route : poser une question (lecture mémoire + appel GPT)
+// ✅ Route : poser une question
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
 
@@ -66,8 +66,11 @@ Réponds avec rigueur, clarté et concision.
     const gptResponse = completion.data.choices[0].message.content;
     res.json({ réponse: gptResponse });
   } catch (err) {
-    console.error("❌ Erreur GPT ou mémoire :", err.message);
-    res.status(500).json({ erreur: "💥 Erreur serveur pendant le traitement." });
+    console.error("❌ Erreur GPT ou mémoire :", err.response?.data || err.message);
+    res.status(500).json({
+      erreur: `💥 Erreur serveur pendant le traitement.`,
+      détail: err.response?.data || err.message
+    });
   }
 });
 
