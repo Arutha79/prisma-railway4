@@ -2,17 +2,18 @@ const express = require("express");
 const morgan = require("morgan");
 const fs = require("fs");
 const path = require("path");
-const OpenAI = require("openai");
+const { Configuration, OpenAIApi } = require("openai");
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MEMORY_PATH = path.join(__dirname, "mémoire", "prisma_memory.json");
 
-// ✅ Configuration OpenAI (version 4.x)
-const openai = new OpenAI({
+// 🔐 Configuration OpenAI pour la version 3.3.0
+const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
+const openai = new OpenAIApi(configuration);
 
 // Middleware
 app.use(express.json());
@@ -23,7 +24,7 @@ app.get("/", (req, res) => {
   res.status(200).send("🎯 Le serveur Express fonctionne !");
 });
 
-// ✅ Route : poser une question
+// ✅ Route : poser une question (lecture mémoire + appel GPT)
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
 
@@ -53,7 +54,7 @@ Maintenant, voici la question de Guillaume :
 Réponds avec rigueur, clarté et concision.
 `;
 
-    const completion = await openai.chat.completions.create({
+    const completion = await openai.createChatCompletion({
       model: "gpt-4",
       messages: [
         { role: "system", content: "Tu es Prisma, une IA sérieuse, rigoureuse et fidèle à la vision de Guillaume." },
@@ -62,7 +63,7 @@ Réponds avec rigueur, clarté et concision.
       temperature: 0.4
     });
 
-    const gptResponse = completion.choices[0].message.content;
+    const gptResponse = completion.data.choices[0].message.content;
     res.json({ réponse: gptResponse });
   } catch (err) {
     console.error("❌ Erreur GPT ou mémoire :", err.message);
@@ -102,23 +103,23 @@ app.post("/ajouter-memoire", (req, res) => {
     fs.writeFileSync(MEMORY_PATH, JSON.stringify(memory, null, 2), "utf-8");
     res.json({ status: "ok", message: "🧠 Bloc mémoire ajouté avec succès." });
   } catch (err) {
-    console.error("❌ Erreur écriture mémoire :", err.message);
-    res.status(500).json({ error: "Échec ajout mémoire." });
+    console.error("❌ Erreur d’écriture mémoire :", err.message);
+    res.status(500).json({ error: "Échec d’ajout mémoire." });
   }
 });
 
-// 🔍 404
+// 🔍 Route 404
 app.use((req, res) => {
   res.status(404).json({ error: "🔍 La route demandée est introuvable." });
 });
 
-// 💥 Erreurs serveur
+// 💥 Gestion globale des erreurs
 app.use((err, req, res, next) => {
-  console.error("❗ Erreur serveur :", err);
+  console.error("❗ Erreur interne :", err);
   res.status(500).json({ error: "💥 Une erreur interne est survenue." });
 });
 
-// 🚀 Lancement
+// 🚀 Lancement du serveur
 app.listen(PORT, () => {
   console.log(`✅ Serveur Express en ligne sur le port ${PORT}`);
 });
