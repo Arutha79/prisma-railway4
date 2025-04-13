@@ -1,4 +1,4 @@
-// ✅ server.js avec route /openapi.json pour GPTPortail
+// ✅ server.js avec mémoire multi-fichiers et auto-enrichissement
 
 const express = require("express");
 const morgan = require("morgan");
@@ -9,33 +9,61 @@ require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MEMORY_PATH = path.join(__dirname, "mémoire", "prisma_memory.json");
+const MEMORY_DIR = path.join(__dirname, "mémoire");
+const PRIMARY_MEMORY = path.join(MEMORY_DIR, "prisma_memory.json");
 
 const cleApi = process.env.OPENAI_API_KEY;
-
-const configuration = new Configuration({
-  apiKey: cleApi,
-});
+const configuration = new Configuration({ apiKey: cleApi });
 const openai = new OpenAIApi(configuration);
 
 app.use(express.json());
 app.use(morgan("dev"));
 
+function chargerToutesLesMemoires() {
+  const fichiers = fs.readdirSync(MEMORY_DIR).filter(f => f.endsWith(".json"));
+  let historiqueGlobal = [];
+  for (const fichier of fichiers) {
+    try {
+      const contenu = fs.readFileSync(path.join(MEMORY_DIR, fichier), "utf-8");
+      const mem = JSON.parse(contenu);
+      if (Array.isArray(mem.historique)) {
+        historiqueGlobal = historiqueGlobal.concat(mem.historique);
+      }
+    } catch (e) {
+      console.warn("⚠️ Erreur lecture mémoire:", fichier, e.message);
+    }
+  }
+  return historiqueGlobal;
+}
+
+function ajouterMemoireAuto(question, réponse) {
+  const bloc = {
+    date: new Date().toISOString(),
+    titre: `Échange avec Guillaume`,
+    contenu: `Q: ${question}\nR: ${réponse}`
+  };
+  try {
+    const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
+    const existeDeja = data.historique.some(b => b.contenu === bloc.contenu);
+    if (!existeDeja) {
+      data.historique.push(bloc);
+      fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
+      console.log("🧠 Souvenir ajouté automatiquement.");
+    }
+  } catch (err) {
+    console.error("❌ Erreur auto-mémoire:", err.message);
+  }
+}
+
 app.get("/", (req, res) => {
   res.status(200).send("🎯 Le serveur Express fonctionne !");
 });
 
-// ✅ Route OpenAPI pour GPTPortail
 app.get("/openapi.json", (req, res) => {
   res.json({
     openapi: "3.1.0",
-    info: {
-      title: "API Prisma",
-      version: "1.0.0"
-    },
-    servers: [
-      { url: "https://web-production-6594.up.railway.app" }
-    ],
+    info: { title: "API Prisma", version: "1.0.0" },
+    servers: [{ url: "https://web-production-6594.up.railway.app" }],
     paths: {
       "/ping-memoire": {
         get: {
@@ -119,9 +147,7 @@ app.get("/openapi.json", (req, res) => {
             }
           },
           responses: {
-            "200": {
-              description: "Confirmation ajout mémoire"
-            }
+            "200": { description: "Confirmation ajout mémoire" }
           }
         }
       }
@@ -136,14 +162,8 @@ app.post("/poser-question", async (req, res) => {
     return res.status(400).json({ erreur: "❗ Aucune question reçue." });
   }
 
-  if (!fs.existsSync(MEMORY_PATH)) {
-    return res.status(404).json({ erreur: "❌ Mémoire introuvable." });
-  }
-
   try {
-    const memory = JSON.parse(fs.readFileSync(MEMORY_PATH, "utf-8"));
-    const historique = memory.historique || [];
-
+    const historique = chargerToutesLesMemoires();
     const contexte = historique
       .map((bloc) => `[${bloc.date}] ${bloc.titre} : ${bloc.contenu}`)
       .join("\n");
@@ -168,6 +188,7 @@ Réponds avec rigueur, clarté et concision.
     });
 
     const gptResponse = completion.data.choices[0].message.content;
+    ajouterMemoireAuto(question, gptResponse);
     res.json({ réponse: gptResponse });
   } catch (err) {
     console.error("❌ Erreur GPT ou mémoire :", err.response?.data || err.message);
@@ -179,16 +200,13 @@ Réponds avec rigueur, clarté et concision.
 });
 
 app.get("/ping-memoire", (req, res) => {
-  if (!fs.existsSync(MEMORY_PATH)) {
-    return res.status(404).json({ error: "❌ Fichier mémoire introuvable." });
-  }
-
   try {
-    const memory = JSON.parse(fs.readFileSync(MEMORY_PATH, "utf-8"));
+    const historique = chargerToutesLesMemoires();
+    const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
     res.json({
       message: "✅ Mémoire Prisma chargée avec succès.",
-      question_test: memory.meta.test_question.question,
-      réponse_attendue: memory.meta.test_question.réponse_attendue,
+      question_test: data.meta?.test_question?.question || "-",
+      réponse_attendue: data.meta?.test_question?.réponse_attendue || "-"
     });
   } catch (err) {
     console.error("❌ Erreur lecture mémoire :", err.message);
@@ -197,15 +215,11 @@ app.get("/ping-memoire", (req, res) => {
 });
 
 app.post("/ajouter-memoire", (req, res) => {
-  if (!fs.existsSync(MEMORY_PATH)) {
-    return res.status(404).json({ error: "❌ Impossible d’écrire : mémoire absente." });
-  }
-
   try {
     const nouveauBloc = req.body;
-    const memory = JSON.parse(fs.readFileSync(MEMORY_PATH, "utf-8"));
+    const memory = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
     memory.historique.push(nouveauBloc);
-    fs.writeFileSync(MEMORY_PATH, JSON.stringify(memory, null, 2), "utf-8");
+    fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(memory, null, 2), "utf-8");
     res.json({ status: "ok", message: "🧠 Bloc mémoire ajouté avec succès." });
   } catch (err) {
     console.error("❌ Erreur d’écriture mémoire :", err.message);
@@ -225,4 +239,3 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`✅ Serveur Express en ligne sur le port ${PORT}`);
 });
-
