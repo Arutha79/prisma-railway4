@@ -4,7 +4,8 @@
   "description": "Serveur Express pour Prisma sur Railway",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "postinstall": "npm install openai"
   },
   "engines": {
     "node": "18.x"
