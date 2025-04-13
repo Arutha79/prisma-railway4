@@ -11,12 +11,26 @@ const MEMORY_PATH = path.join(__dirname, "mémoire", "prisma_memory.json");
 app.use(express.json());
 app.use(morgan("dev"));
 
-// Route de test
+// ✅ Route d’accueil
 app.get("/", (req, res) => {
   res.status(200).send("🎯 Le serveur Express fonctionne !");
 });
 
-// ➕ Route : vérifier la mémoire
+// ✅ Route : poser une question (utilisée par GPTPortail)
+app.post("/poser-question", async (req, res) => {
+  const { question } = req.body;
+
+  if (!question) {
+    return res.status(400).json({ erreur: "❗ Aucune question reçue." });
+  }
+
+  // Simulation de réponse (à remplacer plus tard par un appel à GPT-4)
+  const reponse = `(simulation) Prisma répond : "${question}"`;
+
+  res.json({ réponse: reponse });
+});
+
+// ✅ Route : vérifier la mémoire
 app.get("/ping-memoire", (req, res) => {
   if (!fs.existsSync(MEMORY_PATH)) {
     return res.status(404).json({ error: "❌ Fichier mémoire introuvable." });
@@ -35,7 +49,7 @@ app.get("/ping-memoire", (req, res) => {
   }
 });
 
-// ➕ Route : ajouter un bloc mémoire
+// ✅ Route : ajouter un bloc mémoire
 app.post("/ajouter-memoire", (req, res) => {
   if (!fs.existsSync(MEMORY_PATH)) {
     return res.status(404).json({ error: "❌ Impossible d’écrire : mémoire absente." });
@@ -53,18 +67,18 @@ app.post("/ajouter-memoire", (req, res) => {
   }
 });
 
-// Route 404 par défaut
+// 🔍 Route 404
 app.use((req, res) => {
   res.status(404).json({ error: "🔍 La route demandée est introuvable." });
 });
 
-// Gestion globale des erreurs
+// 💥 Gestion des erreurs
 app.use((err, req, res, next) => {
   console.error("❗ Erreur interne :", err);
   res.status(500).json({ error: "💥 Une erreur interne est survenue." });
 });
 
-// Lancement du serveur
+// 🚀 Lancement
 const server = app.listen(PORT, () => {
   console.log(`✅ Serveur Express en ligne sur le port ${PORT}`);
 });
