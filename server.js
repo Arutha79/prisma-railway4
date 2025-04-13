@@ -2,10 +2,18 @@ const express = require("express");
 const morgan = require("morgan");
 const fs = require("fs");
 const path = require("path");
+const { Configuration, OpenAIApi } = require("openai");
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MEMORY_PATH = path.join(__dirname, "mémoire", "prisma_memory.json");
+
+// 🔐 Configuration OpenAI (clé API lue dans .env)
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
 
 // Middleware
 app.use(express.json());
@@ -16,7 +24,7 @@ app.get("/", (req, res) => {
   res.status(200).send("🎯 Le serveur Express fonctionne !");
 });
 
-// ✅ Route : poser une question (lit toute la mémoire avant réponse)
+// ✅ Route : poser une question (avec lecture mémoire + GPT-4)
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
 
@@ -33,20 +41,37 @@ app.post("/poser-question", async (req, res) => {
     const historique = memory.historique || [];
 
     const contexte = historique
-      .map((bloc) => `🧠 [${bloc.date}] ${bloc.titre} : ${bloc.contenu}`)
+      .map((bloc) => `[${bloc.date}] ${bloc.titre} : ${bloc.contenu}`)
       .join("\n");
 
-    // Simulation d'un appel GPT-4 avec mémoire incluse
-    const reponse = `Voici ce que je sais :\n${contexte}\n\nTa question : "${question}"\n(Réponse simulée - à remplacer par GPT-4)`;
+    const prompt = `
+Tu es Prisma, une IA structurée et mémorielle au service de Guillaume. Voici ce que tu sais :
+${contexte}
 
-    res.json({ réponse: reponse });
+Maintenant, voici la question de Guillaume :
+"${question}"
+
+Réponds avec rigueur, clarté et concision.
+`;
+
+    const completion = await openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: "Tu es Prisma, une IA sérieuse, rigoureuse et fidèle à la vision de Guillaume." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.4
+    });
+
+    const gptResponse = completion.data.choices[0].message.content;
+    res.json({ réponse: gptResponse });
   } catch (err) {
-    console.error("❌ Erreur lecture mémoire :", err.message);
-    res.status(500).json({ erreur: "💥 Erreur serveur pendant lecture mémoire." });
+    console.error("❌ Erreur GPT ou lecture mémoire :", err.message);
+    res.status(500).json({ erreur: "💥 Erreur serveur pendant le traitement." });
   }
 });
 
-// ✅ Route : vérifier la mémoire
+// ✅ Route : ping-memoire
 app.get("/ping-memoire", (req, res) => {
   if (!fs.existsSync(MEMORY_PATH)) {
     return res.status(404).json({ error: "❌ Fichier mémoire introuvable." });
@@ -60,12 +85,12 @@ app.get("/ping-memoire", (req, res) => {
       réponse_attendue: memory.meta.test_question.réponse_attendue,
     });
   } catch (err) {
-    console.error("❌ Erreur de lecture mémoire :", err.message);
+    console.error("❌ Erreur lecture mémoire :", err.message);
     res.status(500).json({ error: "Échec de lecture mémoire." });
   }
 });
 
-// ✅ Route : ajouter un bloc mémoire
+// ✅ Route : ajouter-memoire
 app.post("/ajouter-memoire", (req, res) => {
   if (!fs.existsSync(MEMORY_PATH)) {
     return res.status(404).json({ error: "❌ Impossible d’écrire : mémoire absente." });
@@ -88,13 +113,13 @@ app.use((req, res) => {
   res.status(404).json({ error: "🔍 La route demandée est introuvable." });
 });
 
-// 💥 Gestion des erreurs
+// 💥 Gestion globale des erreurs
 app.use((err, req, res, next) => {
   console.error("❗ Erreur interne :", err);
   res.status(500).json({ error: "💥 Une erreur interne est survenue." });
 });
 
-// 🚀 Lancement
+// 🚀 Lancement du serveur
 const server = app.listen(PORT, () => {
   console.log(`✅ Serveur Express en ligne sur le port ${PORT}`);
 });
