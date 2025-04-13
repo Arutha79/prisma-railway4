@@ -1,3 +1,5 @@
+// ✅ server.js corrigé (clé avec accent gérée correctement)
+
 const express = require("express");
 const morgan = require("morgan");
 const fs = require("fs");
@@ -9,9 +11,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const MEMORY_PATH = path.join(__dirname, "mémoire", "prisma_memory.json");
 
-// 🔐 Configuration OpenAI pour la version 3.3.0
+// ✅ Vérification que la clé API est bien reçue
+console.log("🔑 CLE_API reçue =", process.env["CLÉ_API_OPENAI"]);
+
+// ✅ Configuration OpenAI avec accès entre crochets (clé avec accent)
 const configuration = new Configuration({
-  apiKey: process.env.CLÉ_API_OPENAI, // 🔄 Clé corrigée ici
+  apiKey: process.env["CLÉ_API_OPENAI"],
 });
 const openai = new OpenAIApi(configuration);
 
@@ -19,12 +24,10 @@ const openai = new OpenAIApi(configuration);
 app.use(express.json());
 app.use(morgan("dev"));
 
-// ✅ Route d’accueil
 app.get("/", (req, res) => {
   res.status(200).send("🎯 Le serveur Express fonctionne !");
 });
 
-// ✅ Route : poser une question
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
 
@@ -74,7 +77,6 @@ Réponds avec rigueur, clarté et concision.
   }
 });
 
-// ✅ Route : ping-memoire
 app.get("/ping-memoire", (req, res) => {
   if (!fs.existsSync(MEMORY_PATH)) {
     return res.status(404).json({ error: "❌ Fichier mémoire introuvable." });
@@ -93,7 +95,6 @@ app.get("/ping-memoire", (req, res) => {
   }
 });
 
-// ✅ Route : ajouter-memoire
 app.post("/ajouter-memoire", (req, res) => {
   if (!fs.existsSync(MEMORY_PATH)) {
     return res.status(404).json({ error: "❌ Impossible d’écrire : mémoire absente." });
@@ -111,18 +112,16 @@ app.post("/ajouter-memoire", (req, res) => {
   }
 });
 
-// 🔍 Route 404
 app.use((req, res) => {
   res.status(404).json({ error: "🔍 La route demandée est introuvable." });
 });
 
-// 💥 Gestion globale des erreurs
 app.use((err, req, res, next) => {
   console.error("❗ Erreur interne :", err);
   res.status(500).json({ error: "💥 Une erreur interne est survenue." });
 });
 
-// 🚀 Lancement du serveur
 app.listen(PORT, () => {
   console.log(`✅ Serveur Express en ligne sur le port ${PORT}`);
 });
+
