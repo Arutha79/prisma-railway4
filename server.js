@@ -2,7 +2,7 @@ const express = require("express");
 const morgan = require("morgan");
 const fs = require("fs");
 const path = require("path");
-const { Configuration, OpenAIApi } = require("openai");
+const OpenAI = require("openai");
 require("dotenv").config();
 
 const app = express();
@@ -10,10 +10,9 @@ const PORT = process.env.PORT || 3000;
 const MEMORY_PATH = path.join(__dirname, "mémoire", "prisma_memory.json");
 
 // 🔐 Configuration OpenAI (clé API lue dans .env)
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 // Middleware
 app.use(express.json());
@@ -54,7 +53,7 @@ Maintenant, voici la question de Guillaume :
 Réponds avec rigueur, clarté et concision.
 `;
 
-    const completion = await openai.createChatCompletion({
+    const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
         { role: "system", content: "Tu es Prisma, une IA sérieuse, rigoureuse et fidèle à la vision de Guillaume." },
@@ -63,7 +62,7 @@ Réponds avec rigueur, clarté et concision.
       temperature: 0.4
     });
 
-    const gptResponse = completion.data.choices[0].message.content;
+    const gptResponse = completion.choices[0].message.content;
     res.json({ réponse: gptResponse });
   } catch (err) {
     console.error("❌ Erreur GPT ou lecture mémoire :", err.message);
@@ -122,8 +121,4 @@ app.use((err, req, res, next) => {
 // 🚀 Lancement du serveur
 const server = app.listen(PORT, () => {
   console.log(`✅ Serveur Express en ligne sur le port ${PORT}`);
-});
-
-server.on("error", (err) => {
-  console.error("❌ Erreur serveur :", err);
 });
