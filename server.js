@@ -16,7 +16,7 @@ app.get("/", (req, res) => {
   res.status(200).send("🎯 Le serveur Express fonctionne !");
 });
 
-// ✅ Route : poser une question (utilisée par GPTPortail)
+// ✅ Route : poser une question (lit toute la mémoire avant réponse)
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
 
@@ -24,10 +24,26 @@ app.post("/poser-question", async (req, res) => {
     return res.status(400).json({ erreur: "❗ Aucune question reçue." });
   }
 
-  // Simulation de réponse (à remplacer plus tard par un appel à GPT-4)
-  const reponse = `(simulation) Prisma répond : "${question}"`;
+  if (!fs.existsSync(MEMORY_PATH)) {
+    return res.status(404).json({ erreur: "❌ Mémoire introuvable." });
+  }
 
-  res.json({ réponse: reponse });
+  try {
+    const memory = JSON.parse(fs.readFileSync(MEMORY_PATH, "utf-8"));
+    const historique = memory.historique || [];
+
+    const contexte = historique
+      .map((bloc) => `🧠 [${bloc.date}] ${bloc.titre} : ${bloc.contenu}`)
+      .join("\n");
+
+    // Simulation d'un appel GPT-4 avec mémoire incluse
+    const reponse = `Voici ce que je sais :\n${contexte}\n\nTa question : "${question}"\n(Réponse simulée - à remplacer par GPT-4)`;
+
+    res.json({ réponse: reponse });
+  } catch (err) {
+    console.error("❌ Erreur lecture mémoire :", err.message);
+    res.status(500).json({ erreur: "💥 Erreur serveur pendant lecture mémoire." });
+  }
 });
 
 // ✅ Route : vérifier la mémoire
