@@ -11,7 +11,7 @@ const MEMORY_PATH = path.join(__dirname, "mémoire", "prisma_memory.json");
 
 // 🔐 Configuration OpenAI pour la version 3.3.0
 const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.CLÉ_API_OPENAI, // 🔄 Clé corrigée ici
 });
 const openai = new OpenAIApi(configuration);
 
