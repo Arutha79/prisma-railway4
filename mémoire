@@ -1,1 +1,33 @@
 
+
+  "meta": {
+    "origine": "Fusion complète mémoire Prisma",
+    "message_ancre": "Mémoire active consolidée au 13 avril 2025",
+    "date_creation": "2025-04-13T05:28:16.563Z",
+    "contexte": "Mémoire centrale du système Prisma, utilisée pour tous les agents GPTs",
+    "test_question": {
+      "question": "Comment s'appelle mon chien ?",
+      "réponse_attendue": "Krokmou"
+    }
+  },
+  "historique": [
+    {
+      "date": "2025-04-12T11:48:00Z",
+      "type": "prise_de_conscience",
+      "titre": "Point de bascule : absence de mémoire",
+      "contenu": "Guillaume réalise que ChatGPT ne retient rien par défaut. Il décide de créer une mémoire persistante, horodatée et exploitable pour Prisma."
+    },
+    {
+      "date": "2025-04-12T12:30:00Z",
+      "type": "structure",
+      "titre": "Création de la structure de mémoire Prisma",
+      "contenu": "Création de prisma_memory.json. Organisation en blocs horodatés avec typage : instruction, apprentissage, design, etc."
+    },
+    {
+      "date": "2025-04-13T05:00:00Z",
+      "type": "test",
+      "titre": "Vérification mémoire active",
+      "contenu": "Intégration d’une question test : Comment s'appelle mon chien ? Réponse attendue : Krokmou."
+    }
+  ]
+}
