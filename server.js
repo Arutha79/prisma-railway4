@@ -41,10 +41,10 @@ app.post("/poser-question", async (req, res) => {
     const historique = memory.historique || [];
 
     const contexte = historique
-      .map((bloc) => [${bloc.date}] ${bloc.titre} : ${bloc.contenu})
+      .map((bloc) => `[${bloc.date}] ${bloc.titre} : ${bloc.contenu}`)
       .join("\n");
 
-    const prompt = 
+    const prompt = `
 Tu es Prisma, une IA structurée et mémorielle au service de Guillaume. Voici ce que tu sais :
 ${contexte}
 
@@ -52,7 +52,7 @@ Maintenant, voici la question de Guillaume :
 "${question}"
 
 Réponds avec rigueur, clarté et concision.
-;
+`;
 
     const completion = await openai.createChatCompletion({
       model: "gpt-4",
@@ -68,7 +68,7 @@ Réponds avec rigueur, clarté et concision.
   } catch (err) {
     console.error("❌ Erreur GPT ou mémoire :", err.response?.data || err.message);
     res.status(500).json({
-      erreur: 💥 Erreur serveur pendant le traitement.,
+      erreur: `💥 Erreur serveur pendant le traitement.`,
       détail: err.response?.data || err.message
     });
   }
@@ -124,5 +124,5 @@ app.use((err, req, res, next) => {
 
 // 🚀 Lancement du serveur
 app.listen(PORT, () => {
-  console.log(✅ Serveur Express en ligne sur le port ${PORT});
+  console.log(`✅ Serveur Express en ligne sur le port ${PORT}`);
 });
