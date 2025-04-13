@@ -1,3 +1,5 @@
+// ✅ server.js corrigé avec fallback sécurisé pour la clé API
+
 const express = require("express");
 const morgan = require("morgan");
 const fs = require("fs");
@@ -9,12 +11,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const MEMORY_PATH = path.join(__dirname, "mémoire", "prisma_memory.json");
 
-// ✅ Affiche la clé API reçue (pour debug Railway)
-console.log("🔑 CLE_API reçue =", process.env["CLÉ_API_OPENAI"]);
+// ✅ Fallback pour toutes variantes possibles de la variable CLÉ_API_OPENAI
+const cleApi = process.env["CLÉ_API_OPENAI"] || process.env["CLE_API_OPENAI"] || process.env.CLE_API_OPENAI;
+console.log("🔍 Clé API réellement lue =", cleApi);
 
-// ✅ Configuration OpenAI avec clé API (clé avec accent gérée)
 const configuration = new Configuration({
-  apiKey: process.env["CLÉ_API_OPENAI"],
+  apiKey: cleApi,
 });
 const openai = new OpenAIApi(configuration);
 
