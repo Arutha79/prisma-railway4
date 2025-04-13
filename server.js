@@ -1,5 +1,3 @@
-// ✅ server.js corrigé (clé avec accent gérée correctement)
-
 const express = require("express");
 const morgan = require("morgan");
 const fs = require("fs");
@@ -11,10 +9,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const MEMORY_PATH = path.join(__dirname, "mémoire", "prisma_memory.json");
 
-// ✅ Vérification que la clé API est bien reçue
+// ✅ Affiche la clé API reçue (pour debug Railway)
 console.log("🔑 CLE_API reçue =", process.env["CLÉ_API_OPENAI"]);
 
-// ✅ Configuration OpenAI avec accès entre crochets (clé avec accent)
+// ✅ Configuration OpenAI avec clé API (clé avec accent gérée)
 const configuration = new Configuration({
   apiKey: process.env["CLÉ_API_OPENAI"],
 });
@@ -124,4 +122,3 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`✅ Serveur Express en ligne sur le port ${PORT}`);
 });
-
