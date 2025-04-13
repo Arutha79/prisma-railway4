@@ -1,4 +1,4 @@
-// ✅ server.js corrigé avec fallback sécurisé pour la clé API
+// ✅ server.js corrigé pour utiliser OPENAI_API_KEY (sans accent)
 
 const express = require("express");
 const morgan = require("morgan");
@@ -11,16 +11,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const MEMORY_PATH = path.join(__dirname, "mémoire", "prisma_memory.json");
 
-// ✅ Fallback pour toutes variantes possibles de la variable CLÉ_API_OPENAI
-const cleApi = process.env["CLÉ_API_OPENAI"] || process.env["CLE_API_OPENAI"] || process.env.CLE_API_OPENAI;
-console.log("🔍 Clé API réellement lue =", cleApi);
+const cleApi = process.env.OPENAI_API_KEY;
 
 const configuration = new Configuration({
   apiKey: cleApi,
 });
 const openai = new OpenAIApi(configuration);
 
-// Middleware
 app.use(express.json());
 app.use(morgan("dev"));
 
