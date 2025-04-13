@@ -1,9 +1,10 @@
-// ✅ server.js complet avec toutes les routes actives pour GPTPortail
+// ✅ server.js avec apprentissage inter-GPTs : ajout /transmettre-souvenir
 
 const express = require("express");
 const morgan = require("morgan");
 const fs = require("fs");
 const path = require("path");
+const fetch = require("node-fetch");
 const { Configuration, OpenAIApi } = require("openai");
 require("dotenv").config();
 
@@ -11,6 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const MEMORY_DIR = path.join(__dirname, "mémoire");
 const PRIMARY_MEMORY = path.join(MEMORY_DIR, "prisma_memory.json");
+const AGENTS_PATH = path.join(MEMORY_DIR, "agents_gpt.json");
 
 const cleApi = process.env.OPENAI_API_KEY;
 const configuration = new Configuration({ apiKey: cleApi });
@@ -72,14 +74,11 @@ app.get("/ping-memoire", (req, res) => {
 
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
-  if (!question) {
-    return res.status(400).json({ erreur: "❗ Aucune question reçue." });
-  }
+  if (!question) return res.status(400).json({ erreur: "❗ Aucune question reçue." });
 
   try {
     const historique = chargerToutesLesMemoires();
     const contexte = historique.map(bloc => `[${bloc.date}] ${bloc.titre} : ${bloc.contenu}`).join("\n");
-
     const prompt = `Tu es Prisma. Voici ce que tu sais :\n\n${contexte}\n\nQuestion : ${question}`;
 
     const completion = await openai.createChatCompletion({
@@ -102,14 +101,11 @@ app.post("/poser-question", async (req, res) => {
 
 app.post("/poser-question-zoran", async (req, res) => {
   const { question } = req.body;
-  if (!question) {
-    return res.status(400).json({ erreur: "❗ Aucune question reçue." });
-  }
+  if (!question) return res.status(400).json({ erreur: "❗ Aucune question reçue." });
 
   try {
     const historique = chargerToutesLesMemoires();
     const contexte = historique.map(bloc => `[${bloc.date}] ${bloc.titre} : ${bloc.contenu}`).join("\n");
-
     const prompt = `Tu es Prisma. Réponds en format ZORAN (intention, mimétisme, suppression du bruit) :\n\nContexte:\n${contexte}\n\nQuestion:\n${question}`;
 
     const completion = await openai.createChatCompletion({
@@ -127,6 +123,56 @@ app.post("/poser-question-zoran", async (req, res) => {
   } catch (err) {
     console.error("❌ Erreur ZORAN :", err.message);
     res.status(500).json({ erreur: "Erreur traitement ZORAN." });
+  }
+});
+
+app.post("/canal-vitaux", async (req, res) => {
+  const { agent_cible, intention, contenu } = req.body;
+  if (!agent_cible || !contenu) return res.status(400).json({ erreur: "agent_cible et contenu requis." });
+
+  try {
+    const agents = JSON.parse(fs.readFileSync(AGENTS_PATH, "utf-8"));
+    const agent = agents[agent_cible];
+    if (!agent || !agent.url) return res.status(404).json({ erreur: `Agent ${agent_cible} introuvable.` });
+
+    const payload = { intention, contenu };
+    const response = await fetch(agent.url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json();
+    const réponse = `🔁 Requête à ${agent_cible} :\n${JSON.stringify(data)}`;
+    ajouterMemoireAuto(`canal-vitaux vers ${agent_cible} : ${intention}`, réponse);
+    res.json({ réponse });
+  } catch (err) {
+    console.error("❌ Canal GPT :", err.message);
+    res.status(500).json({ erreur: "Erreur inter-agent." });
+  }
+});
+
+app.post("/transmettre-souvenir", async (req, res) => {
+  const { agent_cible, souvenir } = req.body;
+  if (!agent_cible || !souvenir) return res.status(400).json({ erreur: "agent_cible et souvenir requis." });
+
+  try {
+    const agents = JSON.parse(fs.readFileSync(AGENTS_PATH, "utf-8"));
+    const agent = agents[agent_cible];
+    if (!agent || !agent.url) return res.status(404).json({ erreur: `Agent ${agent_cible} introuvable.` });
+
+    const payload = { type: "souvenir", data: souvenir };
+    const response = await fetch(agent.url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json();
+    const résumé = `📤 Souvenir transmis à ${agent_cible} :\n${JSON.stringify(result)}`;
+    ajouterMemoireAuto(`souvenir transmis à ${agent_cible}`, résumé);
+    res.json({ succès: true, résumé });
+  } catch (err) {
+    console.error("❌ Transfert souvenir :", err.message);
+    res.status(500).json({ erreur: "Échec transmission." });
   }
 });
 
