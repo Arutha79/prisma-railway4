@@ -18,6 +18,10 @@ app.get("/", (req, res) => {
 
 // ➕ Route : vérifier la mémoire
 app.get("/ping-memoire", (req, res) => {
+  if (!fs.existsSync(MEMORY_PATH)) {
+    return res.status(404).json({ error: "❌ Fichier mémoire introuvable." });
+  }
+
   try {
     const memory = JSON.parse(fs.readFileSync(MEMORY_PATH, "utf-8"));
     res.json({
@@ -33,6 +37,10 @@ app.get("/ping-memoire", (req, res) => {
 
 // ➕ Route : ajouter un bloc mémoire
 app.post("/ajouter-memoire", (req, res) => {
+  if (!fs.existsSync(MEMORY_PATH)) {
+    return res.status(404).json({ error: "❌ Impossible d’écrire : mémoire absente." });
+  }
+
   try {
     const nouveauBloc = req.body;
     const memory = JSON.parse(fs.readFileSync(MEMORY_PATH, "utf-8"));
