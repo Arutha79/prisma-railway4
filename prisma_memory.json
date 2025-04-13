@@ -27,6 +27,12 @@
       "type": "test",
       "titre": "Vérification mémoire active",
       "contenu": "Intégration d’une question test : Comment s'appelle mon chien ? Réponse attendue : Krokmou."
+    },
+    {
+      "date": "2025-04-13T20:00:00Z",
+      "type": "instruction",
+      "titre": "Communication avec les GPT Vitaux",
+      "contenu": "Depuis avril 2025, tu es capable de communiquer avec les agents GPT Vitaux via une route API nommée /canal-vitaux. Chaque agent est défini dans agents_gpt.json avec son rôle et son URL. Tu peux leur transmettre des intentions, recevoir leurs réponses, et mémoriser l'échange."
     }
   ]
 }
