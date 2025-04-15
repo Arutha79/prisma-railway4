@@ -1,5 +1,4 @@
-// ✅ server.js complet avec route poser-question (classique + Zoran)
-
+// ✅ server.js complet pour Prisma avec lien vers Alice (GPTPortail)
 const express = require("express");
 const morgan = require("morgan");
 const fs = require("fs");
@@ -186,6 +185,25 @@ app.post("/canal-vitaux", async (req, res) => {
   }
 });
 
+// ✅ Nouvelle route pour communiquer avec Alice (GPTPortail)
+app.post("/question-a-alice", async (req, res) => {
+  const { question } = req.body;
+  if (!question) return res.status(400).json({ erreur: "question manquante" });
+
+  try {
+    const reponse = await fetch("http://gptportail:3000/poser-question", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question })
+    });
+    const data = await reponse.json();
+    res.json({ réponse_dalice: data.reponse });
+  } catch (err) {
+    console.error("❌ Erreur vers Alice:", err.message);
+    res.status(500).json({ erreur: "Alice inaccessible depuis Prisma" });
+  }
+});
+
 app.listen(PORT, () => {
-  console.log(`✅ Serveur Express en ligne sur le port ${PORT}`);
+  console.log(`✅ Prisma est en ligne sur le port ${PORT}`);
 });
