@@ -204,6 +204,11 @@ app.post("/question-a-alice", async (req, res) => {
   }
 });
 
+// ✅ Route racine pour test de disponibilité
+app.get("/", (req, res) => {
+  res.send("🚀 Prisma est en ligne.");
+});
+
 app.listen(PORT, () => {
   console.log(`✅ Prisma est en ligne sur le port ${PORT}`);
 });
