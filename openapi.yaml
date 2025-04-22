@@ -1,0 +1,86 @@
+openapi: 3.1.0
+info:
+  title: Prisma API
+  description: API publique de Prisma, moteur mémoire IA du Super Cerveau.
+  version: 1.0.0
+servers:
+  - url: https://web-production-6594.up.railway.app
+
+paths:
+  /poser-question:
+    post:
+      operationId: poserQuestion
+      summary: Poser une question à Prisma (mémoire intégrée)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                question:
+                  type: string
+              required:
+                - question
+      responses:
+        "200":
+          description: Réponse de Prisma
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  réponse:
+                    type: string
+
+  /ajouter-memoire:
+    post:
+      operationId: ajouterMemoire
+      summary: Ajouter un souvenir à la mémoire de Prisma
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  format: date-time
+                titre:
+                  type: string
+                contenu:
+                  type: string
+              required:
+                - date
+                - titre
+                - contenu
+      responses:
+        "200":
+          description: Souvenir ajouté
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statut:
+                    type: string
+
+  /ping-memoire:
+    get:
+      operationId: pingMemoire
+      summary: Vérifie l’état de la mémoire de Prisma
+      responses:
+        "200":
+          description: Retourne une question test et la mémoire
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  question_test:
+                    type: string
+                  réponse_attendue:
+                    type: string
