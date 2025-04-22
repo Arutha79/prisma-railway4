@@ -20,6 +20,9 @@ const openai = new OpenAIApi(configuration);
 app.use(express.json());
 app.use(morgan("dev"));
 
+// ✅ Ajout essentiel : servir les fichiers du dossier public
+app.use(express.static(path.join(__dirname, 'public')));
+
 function chargerToutesLesMemoires() {
   const fichiers = fs.readdirSync(MEMORY_DIR).filter(f => f.endsWith(".json"));
   let historiqueGlobal = [];
@@ -185,7 +188,6 @@ app.post("/canal-vitaux", async (req, res) => {
   }
 });
 
-// ✅ Nouvelle route pour communiquer avec Alice (GPTPortail)
 app.post("/question-a-alice", async (req, res) => {
   const { question } = req.body;
   if (!question) return res.status(400).json({ erreur: "question manquante" });
@@ -204,7 +206,6 @@ app.post("/question-a-alice", async (req, res) => {
   }
 });
 
-// ✅ Route racine pour test de disponibilité
 app.get("/", (req, res) => {
   res.send("🚀 Prisma est en ligne.");
 });
