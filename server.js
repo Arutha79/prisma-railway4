@@ -126,7 +126,7 @@ app.post("/poser-question", async (req, res) => {
     // 🚀 Déclencheur automatique si intention = connexion
     const intention = detecterIntention(question);
     if (intention === "connexion") {
-      await fetch("http://localhost:3000/canal-vitaux", {
+      await fetch("https://web-production-6594.up.railway.app/canal-vitaux", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
