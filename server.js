@@ -1,4 +1,4 @@
-// ✅ server.js modifié pour Prisma avec debug complet de /canal-vitaux
+// ✅ server.js complet pour Prisma avec déclencheur automatique vers ConnecteurGPT
 
 const express = require("express");
 const morgan = require("morgan");
@@ -19,7 +19,9 @@ const openai = new OpenAIApi(configuration);
 
 app.use(express.json());
 app.use(morgan("dev"));
+app.use(express.static(path.join(__dirname, 'public')));
 
+// 🔍 Détecteur d'intention simple
 function detecterIntention(question) {
   if (question.toLowerCase().includes("connexion")) {
     return "connexion";
@@ -63,6 +65,43 @@ function ajouterMemoireAuto(question, réponse) {
   }
 }
 
+function injecterSouvenirInitialVitaux() {
+  try {
+    const bloc = {
+      date: "2025-04-13T20:00:00Z",
+      type: "instruction",
+      titre: "Communication avec les GPT Vitaux",
+      contenu: "Depuis avril 2025, tu es capable de communiquer avec les agents GPT Vitaux via une route API nommée /canal-vitaux. Chaque agent est défini dans agents_gpt.json avec son rôle et son URL. Tu peux leur transmettre des intentions, recevoir leurs réponses, et mémoriser l'échange."
+    };
+    const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
+    const existe = data.historique.find(b => b.titre === bloc.titre);
+    if (!existe) {
+      data.historique.push(bloc);
+      fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
+      console.log("📌 Souvenir instruction GPT Vitaux injecté.");
+    }
+  } catch (e) {
+    console.warn("⚠️ Échec injection mémoire vitaux:", e.message);
+  }
+}
+
+injecterSouvenirInitialVitaux();
+
+app.get("/ping-memoire", (req, res) => {
+  try {
+    const memory = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
+    const meta = memory.meta?.test_question || {};
+    res.json({
+      message: "✅ Mémoire Prisma accessible.",
+      question_test: meta.question || "-",
+      réponse_attendue: meta.réponse_attendue || "-"
+    });
+  } catch (err) {
+    console.error("❌ Erreur lecture mémoire:", err.message);
+    res.status(500).json({ erreur: "Échec lecture mémoire." });
+  }
+});
+
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
   if (!question) return res.status(400).json({ erreur: "❗ Aucune question reçue." });
@@ -84,6 +123,7 @@ app.post("/poser-question", async (req, res) => {
     const gptResponse = completion.data.choices[0].message.content;
     ajouterMemoireAuto(question, gptResponse);
 
+    // 🚀 Déclencheur automatique si intention = connexion
     const intention = detecterIntention(question);
     if (intention === "connexion") {
       await fetch("http://localhost:3000/canal-vitaux", {
@@ -105,26 +145,52 @@ app.post("/poser-question", async (req, res) => {
   }
 });
 
-app.post("/canal-vitaux", async (req, res) => {
+// Routes ConnecteurGPT
+app.post("/vers-connecteurgpt", async (req, res) => {
   const { cible, intention, contenu } = req.body;
-  console.log("📩 [PRISMA] Reçu pour /canal-vitaux :", { cible, intention, contenu });
-
   try {
     const response = await fetch("https://connecteurgpt-production.up.railway.app/transmettre", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      redirect: "follow",
       body: JSON.stringify({ cible, intention, contenu })
     });
-
     const data = await response.json();
-    console.log("✅ [PRISMA] Réponse de ConnecteurGPT :", data);
-    res.status(200).json({ statut: "✅ Transmis via canal-vitaux", retour: data });
-
+    res.json({ statut: "✅ Transmis via ConnecteurGPT", retour: data });
   } catch (err) {
-    console.error("❌ [PRISMA] Erreur vers ConnecteurGPT :", err.message);
-    res.status(500).json({ erreur: "Échec de la transmission à ConnecteurGPT." });
+    console.error("❌ Erreur vers ConnecteurGPT:", err.message);
+    res.status(500).json({ erreur: "ConnecteurGPT inaccessible" });
   }
+});
+
+app.post("/canal-vitaux", async (req, res) => {
+  const { cible, intention, contenu } = req.body;
+  try {
+    const response = await fetch("https://connecteurgpt-production.up.railway.app/transmettre", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cible, intention, contenu })
+    });
+    const data = await response.json();
+    res.json({ statut: "✅ Transmis via canal-vitaux", retour: data });
+  } catch (err) {
+    console.error("❌ canal-vitaux:", err.message);
+    res.status(500).json({ erreur: "Échec canal-vitaux" });
+  }
+});
+
+app.get("/check-connecteurgpt", async (req, res) => {
+  try {
+    const test = await fetch("https://connecteurgpt-production.up.railway.app/");
+    const texte = await test.text();
+    res.json({ connecté: true, message: texte });
+  } catch (err) {
+    console.error("❌ ConnecteurGPT inaccessible :", err.message);
+    res.status(500).json({ connecté: false, erreur: err.message });
+  }
+});
+
+app.get("/", (req, res) => {
+  res.send("🚀 Prisma est en ligne.");
 });
 
 app.listen(PORT, () => {
