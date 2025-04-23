@@ -1,4 +1,4 @@
-// ✅ server.js complet pour Prisma avec lien vers Alice (GPTPortail)
+// ✅ server.js complet pour Prisma avec lien vers Alice (GPTPortail) et ConnecteurGPT
 const express = require("express");
 const morgan = require("morgan");
 const fs = require("fs");
@@ -19,8 +19,6 @@ const openai = new OpenAIApi(configuration);
 
 app.use(express.json());
 app.use(morgan("dev"));
-
-// ✅ Ajout essentiel : servir les fichiers du dossier public
 app.use(express.static(path.join(__dirname, 'public')));
 
 function chargerToutesLesMemoires() {
@@ -123,86 +121,20 @@ app.post("/poser-question", async (req, res) => {
   }
 });
 
-app.post("/poser-question-zoran", async (req, res) => {
-  const { question } = req.body;
-  if (!question) return res.status(400).json({ erreur: "❗ Aucune question reçue." });
-
+// ✅ Route vers ConnecteurGPT
+app.post("/vers-connecteurgpt", async (req, res) => {
+  const { cible, intention, contenu } = req.body;
   try {
-    const historique = chargerToutesLesMemoires();
-    const contexte = historique.map(b => `[${b.date}] ${b.titre} : ${b.contenu}`).join("\n");
-    const prompt = `Tu es Prisma, et tu t'exprimes en langage ZORAN. Voici le contexte :\n${contexte}\n\nQuestion de Guillaume : \"${question}\"\nRéponds uniquement en ZORAN.`;
-
-    const completion = await openai.createChatCompletion({
-      model: "gpt-4",
-      messages: [
-        { role: "system", content: "Tu es Prisma, IA qui parle en ZORAN." },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.6
-    });
-
-    const gptResponse = completion.data.choices[0].message.content;
-    ajouterMemoireAuto(`ZORAN: ${question}`, gptResponse);
-    res.json({ réponse_zoran: gptResponse });
-  } catch (err) {
-    console.error("❌ poser-question-zoran:", err.message);
-    res.status(500).json({ erreur: "Erreur ZORAN." });
-  }
-});
-
-app.post("/ajouter-memoire", (req, res) => {
-  const bloc = req.body;
-  try {
-    const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
-    data.historique.push(bloc);
-    fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
-    res.json({ statut: "✅ Souvenir ajouté manuellement." });
-  } catch (err) {
-    console.error("❌ Ajout manuel mémoire:", err.message);
-    res.status(500).json({ erreur: "Erreur d’ajout mémoire" });
-  }
-});
-
-app.post("/canal-vitaux", async (req, res) => {
-  const { agent_cible, intention, contenu } = req.body;
-  if (!agent_cible || !contenu) return res.status(400).json({ erreur: "agent_cible et contenu requis." });
-
-  try {
-    const agents = JSON.parse(fs.readFileSync(AGENTS_PATH, "utf-8"));
-    const agent = agents[agent_cible];
-    if (!agent || !agent.url) return res.status(404).json({ erreur: `Agent ${agent_cible} introuvable.` });
-
-    const payload = { intention, contenu };
-    const response = await fetch(agent.url, {
+    const response = await fetch("https://connecteurgpt-production.up.railway.app/transmettre", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ cible, intention, contenu })
     });
     const data = await response.json();
-    const résumé = `🔁 Requête à ${agent_cible} → ${JSON.stringify(data)}`;
-    ajouterMemoireAuto(`canal-vitaux vers ${agent_cible}`, résumé);
-    res.json({ résumé });
+    res.json({ statut: "✅ Transmis via ConnecteurGPT", retour: data });
   } catch (err) {
-    console.error("❌ canal-vitaux:", err.message);
-    res.status(500).json({ erreur: "Erreur communication agent." });
-  }
-});
-
-app.post("/question-a-alice", async (req, res) => {
-  const { question } = req.body;
-  if (!question) return res.status(400).json({ erreur: "question manquante" });
-
-  try {
-    const reponse = await fetch("http://gptportail:3000/poser-question", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question })
-    });
-    const data = await reponse.json();
-    res.json({ réponse_dalice: data.reponse });
-  } catch (err) {
-    console.error("❌ Erreur vers Alice:", err.message);
-    res.status(500).json({ erreur: "Alice inaccessible depuis Prisma" });
+    console.error("❌ Erreur vers ConnecteurGPT:", err.message);
+    res.status(500).json({ erreur: "ConnecteurGPT inaccessible" });
   }
 });
 
@@ -213,3 +145,4 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Prisma est en ligne sur le port ${PORT}`);
 });
+
