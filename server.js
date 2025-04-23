@@ -174,4 +174,3 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Prisma est en ligne sur le port ${PORT}`);
 });
-
