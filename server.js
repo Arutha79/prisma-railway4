@@ -138,6 +138,23 @@ app.post("/vers-connecteurgpt", async (req, res) => {
   }
 });
 
+// ✅ Alias officiel : /canal-vitaux pour compatibilité
+app.post("/canal-vitaux", async (req, res) => {
+  const { cible, intention, contenu } = req.body;
+  try {
+    const response = await fetch("https://connecteurgpt-production.up.railway.app/transmettre", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cible, intention, contenu })
+    });
+    const data = await response.json();
+    res.json({ statut: "✅ Transmis via canal-vitaux", retour: data });
+  } catch (err) {
+    console.error("❌ canal-vitaux:", err.message);
+    res.status(500).json({ erreur: "Échec canal-vitaux" });
+  }
+});
+
 // ✅ Vérifie la connexion avec ConnecteurGPT
 app.get("/check-connecteurgpt", async (req, res) => {
   try {
