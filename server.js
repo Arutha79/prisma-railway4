@@ -138,6 +138,18 @@ app.post("/vers-connecteurgpt", async (req, res) => {
   }
 });
 
+// ✅ Vérifie la connexion avec ConnecteurGPT
+app.get("/check-connecteurgpt", async (req, res) => {
+  try {
+    const test = await fetch("https://connecteurgpt-production.up.railway.app/");
+    const texte = await test.text();
+    res.json({ connecté: true, message: texte });
+  } catch (err) {
+    console.error("❌ ConnecteurGPT inaccessible :", err.message);
+    res.status(500).json({ connecté: false, erreur: err.message });
+  }
+});
+
 app.get("/", (req, res) => {
   res.send("🚀 Prisma est en ligne.");
 });
