@@ -102,6 +102,26 @@ app.get("/ping-memoire", (req, res) => {
   }
 });
 
+app.post("/ajouter-memoire", (req, res) => {
+  const { date, titre, contenu } = req.body;
+
+  if (!date || !titre || !contenu) {
+    return res.status(400).json({ erreur: "Champs requis manquants." });
+  }
+
+  try {
+    const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
+    const bloc = { date, titre, contenu };
+    data.historique.push(bloc);
+    fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
+    console.log("🧠 Souvenir ajouté manuellement via /ajouter-memoire");
+    res.json({ statut: "✅ Souvenir enregistré dans la mémoire Prisma." });
+  } catch (err) {
+    console.error("❌ Erreur ajout mémoire:", err.message);
+    res.status(500).json({ erreur: "Échec ajout mémoire." });
+  }
+});
+
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
   if (!question) return res.status(400).json({ erreur: "❗ Aucune question reçue." });
