@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧠 Prisma Dashboard</title>
+  <script defer>
+    async function chargerIntentions() {
+      const res = await fetch('http://localhost:4000/intentions-pending');
+      const intentions = await res.json();
+      const liste = document.getElementById('liste-intentions');
+      liste.innerHTML = '';
+      intentions.forEach(i => {
+        const li = document.createElement('li');
+        li.textContent = `🟡 ${i.type} → ${i.cible} : ${i.contenu}`;
+        liste.appendChild(li);
+      });
+    }
+
+    async function envoyerIntention() {
+      const cible = document.getElementById('cible').value;
+      const contenu = document.getElementById('contenu').value;
+      const nouvelle = {
+        id: 'intent-' + Date.now(),
+        type: 'connexion',
+        cible,
+        contenu,
+        statut: 'en_attente'
+      };
+
+      await fetch('http://localhost:4000/nouvelle-intention', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nouvelle)
+      });
+
+      chargerIntentions();
+    }
+
+    window.onload = chargerIntentions;
+  </script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; background: #f4f4f4; }
+    h1 { font-size: 1.8rem; margin-bottom: 1rem; }
+    input, textarea { width: 100%; margin-bottom: 1rem; padding: 0.5rem; }
+    button { padding: 0.5rem 1rem; background: #4caf50; color: white; border: none; cursor: pointer; }
+    ul { list-style: none; padding: 0; }
+    li { background: white; margin-bottom: 0.5rem; padding: 0.5rem; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>🧠 Prisma — Tableau de bord des intentions</h1>
+
+  <div>
+    <input type="text" id="cible" placeholder="Cible (ex: ZoranGPT)">
+    <textarea id="contenu" placeholder="Contenu de l'intention"></textarea>
+    <button onclick="envoyerIntention()">➕ Ajouter une intention</button>
+  </div>
+
+  <h2>📋 Intentions en attente :</h2>
+  <ul id="liste-intentions"></ul>
+</body>
+</html>
