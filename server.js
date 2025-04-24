@@ -150,7 +150,7 @@ app.post("/poser-question", async (req, res) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          cible: "zorangpt",
+          cible: "ZoranGPT",
           intention: "connexion",
           contenu: "Prisma souhaite établir une connexion directe avec toi, ZoranGPT."
         })
