@@ -1,0 +1,9 @@
+services:
+  prisma:
+    startCommand: "npm start"
+    rootDirectory: "."
+    envVars:
+      - key: PORT
+        value: "3000"
+      - key: OPENAI_API_KEY
+        value: "votre_clé_openai_ici"
