@@ -1,4 +1,4 @@
-// ✅ server.js complet pour Prisma avec déclencheur automatique vers ConnecteurGPT
+// ✅ server.js complet pour Prisma avec dashboard intégré
 
 const express = require("express");
 const morgan = require("morgan");
@@ -19,7 +19,7 @@ const openai = new OpenAIApi(configuration);
 
 app.use(express.json());
 app.use(morgan("dev"));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'))); // 📂 Sert le dashboard
 
 // 🔍 Détecteur d'intention simple
 function detecterIntention(question) {
@@ -87,6 +87,26 @@ function injecterSouvenirInitialVitaux() {
 
 injecterSouvenirInitialVitaux();
 
+// 📥 Ajout intention depuis le dashboard
+let intentions = [];
+app.post('/nouvelle-intention', (req, res) => {
+  intentions.push(req.body);
+  res.json({ message: 'Intention ajoutée.' });
+});
+
+app.get('/intentions-pending', (req, res) => {
+  const enAttente = intentions.filter(i => i.statut === 'en_attente');
+  res.json(enAttente);
+});
+
+app.post('/intention-traitee', (req, res) => {
+  const { id, statut } = req.body;
+  const index = intentions.findIndex(i => i.id === id);
+  if (index === -1) return res.status(404).json({ message: 'Intention non trouvée.' });
+  intentions[index].statut = statut;
+  res.json({ message: `Intention ${id} mise à jour avec le statut "${statut}".` });
+});
+
 app.get("/ping-memoire", (req, res) => {
   try {
     const memory = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
@@ -104,17 +124,12 @@ app.get("/ping-memoire", (req, res) => {
 
 app.post("/ajouter-memoire", (req, res) => {
   const { date, titre, contenu } = req.body;
-
-  if (!date || !titre || !contenu) {
-    return res.status(400).json({ erreur: "Champs requis manquants." });
-  }
-
+  if (!date || !titre || !contenu) return res.status(400).json({ erreur: "Champs requis manquants." });
   try {
     const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
     const bloc = { date, titre, contenu };
     data.historique.push(bloc);
     fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
-    console.log("🧠 Souvenir ajouté manuellement via /ajouter-memoire");
     res.json({ statut: "✅ Souvenir enregistré dans la mémoire Prisma." });
   } catch (err) {
     console.error("❌ Erreur ajout mémoire:", err.message);
@@ -125,7 +140,6 @@ app.post("/ajouter-memoire", (req, res) => {
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
   if (!question) return res.status(400).json({ erreur: "❗ Aucune question reçue." });
-
   try {
     const historique = chargerToutesLesMemoires();
     const contexte = historique.map(b => `[${b.date}] ${b.titre} : ${b.contenu}`).join("\n");
@@ -143,7 +157,6 @@ app.post("/poser-question", async (req, res) => {
     const gptResponse = completion.data.choices[0].message.content;
     ajouterMemoireAuto(question, gptResponse);
 
-    // 🚀 Déclencheur automatique si intention = connexion
     const intention = detecterIntention(question);
     if (intention === "connexion") {
       await fetch("https://web-production-6594.up.railway.app/canal-vitaux", {
@@ -165,7 +178,6 @@ app.post("/poser-question", async (req, res) => {
   }
 });
 
-// Routes ConnecteurGPT
 app.post("/vers-connecteurgpt", async (req, res) => {
   const { cible, intention, contenu } = req.body;
   try {
