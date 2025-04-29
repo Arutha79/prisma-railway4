@@ -1,4 +1,4 @@
-// ✅ server.js complet avec Git auto-push + logs + debug complet + route /debug-memoire
+// ✅ server.js complet avec Git auto-push + logs + debug complet + /poser-question + /debug-memoire
 
 const express = require("express");
 const morgan = require("morgan");
@@ -127,6 +127,48 @@ app.post("/ajouter-memoire", async (req, res) => {
   } catch (err) {
     console.error("❌ Erreur ajout mémoire:", err);
     res.status(500).json({ erreur: "Échec ajout mémoire." });
+  }
+});
+
+app.post("/poser-question", async (req, res) => {
+  const { question } = req.body;
+  if (!question) return res.status(400).json({ erreur: "❗ Aucune question reçue." });
+
+  try {
+    const historique = chargerToutesLesMemoires();
+    const contexte = historique.map(b => `[${b.date}] ${b.titre} : ${b.contenu}`).join("\n");
+    const prompt = `Tu es Prisma. Voici ce que tu sais :\n${contexte}\n\nQuestion : \"${question}\"\nRéponds avec clarté.`;
+
+    const completion = await openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: "Tu es Prisma, IA mémorielle au service de Guillaume." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.4
+    });
+
+    const gptResponse = completion.data.choices[0].message.content;
+    ajouterMemoireAuto(question, gptResponse);
+
+    const intention = detecterIntention(question);
+    if (intention === "connexion") {
+      await fetch("https://web-production-6594.up.railway.app/canal-vitaux", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cible: "APIDEGPT",
+          intention: "connexion",
+          contenu: "Prisma souhaite établir une connexion directe avec toi, ZoranGPT."
+        })
+      });
+      console.log("🔗 Connexion automatique envoyée à ZoranGPT via /canal-vitaux.");
+    }
+
+    res.json({ réponse: gptResponse });
+  } catch (err) {
+    console.error("❌ poser-question:", err.message);
+    res.status(500).json({ erreur: "Erreur génération réponse." });
   }
 });
 
