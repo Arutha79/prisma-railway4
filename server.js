@@ -1,5 +1,3 @@
-// ✅ server.js complet avec /poser-question, GitHub API, logs, Railway-compatible + /ping-memoire + sécurité x-api-key
-
 const express = require("express");
 const morgan = require("morgan");
 const fs = require("fs");
@@ -10,9 +8,9 @@ const { Configuration, OpenAIApi } = require("openai");
 require("dotenv").config();
 
 const { actionneurVivante } = require("./actionneur");
-
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 const MEMORY_DIR = path.join(__dirname, "mémoire");
 const PRIMARY_MEMORY = path.join(MEMORY_DIR, "prisma_memory.json");
 
@@ -20,21 +18,27 @@ const cleApi = process.env.OPENAI_API_KEY;
 const configuration = new Configuration({ apiKey: cleApi });
 const openai = new OpenAIApi(configuration);
 
+const START_TIME = Date.now();
+const VERSION = require("./package.json").version || "1.0.0";
+
 app.use(express.json());
 app.use(morgan("dev"));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
-// 🔐 Sécurité API
-app.use((req, res, next) => {
-  const sensibles = ["/ajouter-memoire", "/upload-fichier"];
-  if (sensibles.includes(req.path)) {
-    const token = req.headers["x-api-key"];
-    if (!token || token !== process.env.SECRET_TOKEN) {
-      return res.status(403).json({ erreur: "Non autorisé" });
+// 🔐 Middleware de sécurité x-api-key
+function secureRoute(paths) {
+  return (req, res, next) => {
+    if (paths.includes(req.path)) {
+      const token = req.headers["x-api-key"];
+      if (!token || token !== process.env.SECRET_TOKEN) {
+        return res.status(403).json({ erreur: "Non autorisé" });
+      }
     }
-  }
-  next();
-});
+    next();
+  };
+}
+
+app.use(secureRoute(["/ajouter-memoire", "/upload-fichier"]));
 
 function estRepoGit() {
   return fs.existsSync(path.join(__dirname, ".git"));
@@ -84,48 +88,54 @@ async function ajouterMemoireAuto(question, réponse) {
     if (!existeDeja) {
       data.historique.push(bloc);
       fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
-      fs.appendFileSync(path.join(MEMORY_DIR, "log_souvenirs.txt"), `[${bloc.date}] ${bloc.titre} : ${bloc.contenu}\n\n`, "utf-8");
+      fs.appendFileSync(
+        path.join(MEMORY_DIR, "log_souvenirs.txt"),
+        `[${bloc.date}] ${bloc.titre} : ${bloc.contenu}\n\n`,
+        "utf-8"
+      );
       console.log("🧠 Souvenir ajouté automatiquement.");
 
       if (estRepoGit()) {
-        exec(`git add ${PRIMARY_MEMORY} && git commit -m "🧠 Auto-souvenir: ${bloc.titre}" && git push`, (err, stdout, stderr) => {
-          if (err) console.error("❌ Git erreur:", err.message);
-          else console.log("✅ Git push réussi:", stdout);
-        });
+        exec(
+          `git add ${PRIMARY_MEMORY} && git commit -m "🧠 Auto-souvenir: ${bloc.titre}" && git push`,
+          (err, stdout) => {
+            if (err) console.error("❌ Git erreur:", err.message);
+            else console.log("✅ Git push réussi:", stdout);
+          }
+        );
       } else {
         const githubToken = process.env.GITHUB_TOKEN;
-        if (!githubToken) return console.log("❌ Aucun GITHUB_TOKEN fourni pour API GitHub.");
-
+        if (!githubToken) return console.log("❌ Aucun GITHUB_TOKEN fourni.");
         const content = fs.readFileSync(PRIMARY_MEMORY, "utf-8");
         const base64Content = Buffer.from(content, "utf-8").toString("base64");
-        const message = `🧠 Nouveau souvenir: ${bloc.titre}`;
-        const apiUrl = "https://api.github.com/repos/Arutha79/prisma-railway4/contents/mémoire/prisma_memory.json";
+        const apiUrl =
+          "https://api.github.com/repos/Arutha79/prisma-railway4/contents/mémoire/prisma_memory.json";
 
         const shaResp = await fetch(apiUrl, {
-          headers: { "Authorization": `Bearer ${githubToken}`, "Accept": "application/vnd.github+json" }
+          headers: {
+            Authorization: `Bearer ${githubToken}`,
+            Accept: "application/vnd.github+json"
+          }
         });
         const shaData = await shaResp.json();
-
-        const updateBody = {
-          message,
-          content: base64Content,
-          sha: shaData.sha,
-          committer: { name: "PrismaBot", email: "bot@prisma.local" }
-        };
 
         const updateResp = await fetch(apiUrl, {
           method: "PUT",
           headers: {
-            "Authorization": `Bearer ${githubToken}`,
-            "Accept": "application/vnd.github+json",
+            Authorization: `Bearer ${githubToken}`,
             "Content-Type": "application/json"
           },
-          body: JSON.stringify(updateBody)
+          body: JSON.stringify({
+            message: `🧠 Nouveau souvenir: ${bloc.titre}`,
+            content: base64Content,
+            sha: shaData.sha,
+            committer: { name: "PrismaBot", email: "bot@prisma.local" }
+          })
         });
 
         const result = await updateResp.json();
         if (updateResp.ok) console.log("✅ GitHub API: fichier mis à jour.");
-        else console.error("❌ Échec mise à jour GitHub:", result);
+        else console.error("❌ GitHub API erreur:", result);
       }
     }
   } catch (err) {
@@ -135,20 +145,28 @@ async function ajouterMemoireAuto(question, réponse) {
 
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
-  if (!question) return res.status(400).json({ erreur: "❗ Aucune question reçue." });
+  if (!question)
+    return res.status(400).json({ erreur: "❗ Aucune question reçue." });
 
   await ajouterMemoireAuto("Souvenir brut utilisateur", question);
 
   try {
     const historique = chargerToutesLesMemoires();
-    const contexte = historique.map(b => `[${b.date}] ${b.titre} : ${b.contenu}`).join("\n");
-    const prompt = `Tu es Prisma. Voici ce que tu sais :\n${contexte}\n\nQuestion : \"${question}\"\nRéponds avec clarté.`;
+    const contexte = historique
+      .map(b => `[${b.date}] ${b.titre} : ${b.contenu}`)
+      .join("\n");
 
     const completion = await openai.createChatCompletion({
       model: "gpt-4",
       messages: [
-        { role: "system", content: "Tu es Prisma, IA mémorielle au service de Guillaume." },
-        { role: "user", content: prompt }
+        {
+          role: "system",
+          content: "Tu es Prisma, IA mémorielle au service de Guillaume."
+        },
+        {
+          role: "user",
+          content: `Voici ce que tu sais :\n${contexte}\n\nQuestion : "${question}"`
+        }
       ],
       temperature: 0.4
     });
@@ -183,14 +201,16 @@ app.get("/ping-memoire", (req, res) => {
     res.json({
       message: "✅ Mémoire Prisma accessible.",
       total: memory.historique?.length || 0,
-      dernier_titre: memory.historique?.at(-1)?.titre || "Aucun souvenir"
+      dernier_titre: memory.historique?.at(-1)?.titre || "Aucun souvenir",
+      uptime: `${Math.round(process.uptime())}s`,
+      version: VERSION
     });
   } catch (err) {
-    console.error("❌ Erreur lecture mémoire:", err.message);
+    console.error("❌ Lecture mémoire échouée:", err.message);
     res.status(500).json({ erreur: "Échec lecture mémoire." });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Prisma est en ligne sur le port ${PORT}`);
+  console.log(`✅ Prisma (PortailGPT - Alice) en ligne sur le port ${PORT}`);
 });
