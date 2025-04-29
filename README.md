@@ -1,77 +1,105 @@
-# 🧠 Prisma — IA Mémoire avec Interface & Actions
+# 🤖 Prisma - IA Mémoire Autonome
 
-Serveur Express intelligent qui joue le rôle de cerveau mémoire.  
-Intègre un dashboard, une supervision des intentions, et des canaux de communication vers des agents GPT (via ConnecteurGPT).
+**Prisma** est une IA Express.js déployable sur Railway, capable de mémoriser ses interactions, stocker ses souvenirs sur GitHub, détecter des intentions et agir via des agents connectés.
 
 ---
 
-## 🔧 Démarrage local
+## 🚀 Fonctionnalités clés
+
+- 🧠 **Mémoire persistante** dans `prisma_memory.json` (JSON versionné + logs `.txt`)
+- 🔁 **Cycle complet : poser une question → générer une réponse → mémoriser**
+- 🔗 Connexion automatique à des agents externes (canal-vitaux)
+- 📤 Upload de fichiers avec lien mémorisé dans la mémoire
+- 🔐 Sécurité API via `x-api-key`
+- 📦 Compatible Railway + GitHub API fallback
+
+---
+
+## 📦 Installation
 
 ```bash
 npm install
-npm start
 ```
 
----
-
-## 🌐 Déploiement Railway
-
-1. Pousse ce dépôt sur GitHub (public ou privé avec Railway connecté)
-2. Clique sur **“Deploy on Railway”** ou utilise l’import manuel
-
----
-
-## 🔐 Variables d’environnement (.env)
+Ajoutez un fichier `.env` à la racine avec :
 
 ```env
 PORT=3000
-OPENAI_API_KEY=sk-...
+OPENAI_API_KEY=sk-votre-cle
+GITHUB_TOKEN=ghp_votre_token_github
+SECRET_TOKEN=ma_clé_ultra_secrète
 ```
 
 ---
 
-## ✅ Fonctionnalités intégrées
+## 🔧 Routes principales
 
-- **Mémoire longue durée** (fichier JSON)
-- **Traitement de question via OpenAI**
-- **Déclencheur automatique** vers ZoranGPT (connexion)
-- **Dashboard HTML** à `http://localhost:3000/prisma_dashboard.html`
-- **Écoute d'intentions** (via GET /intentions-pending)
-- **Suivi des actions** (POST /intention-traitee)
-
----
-
-## 💥 Dashboard d’intentions
-
-📂 Accessible à :  
-`/prisma_dashboard.html` *(déjà servi via Express)*
-
-Permet de :
-- Créer une intention (ex. : connexion vers ZoranGPT)
-- Visualiser les intentions actives
-- Superviser en direct le lien avec ConnecteurGPT
-
----
-
-## 🚀 Exemple d’intention
+### POST `/poser-question`
+Pose une question à Prisma et génère une réponse avec GPT-4.
+➡️ Mémorise à la fois la question brute et la réponse.
 
 ```json
 {
-  "id": "intent-001",
-  "type": "connexion",
-  "cible": "ZoranGPT",
-  "contenu": "Prisma souhaite établir une connexion directe avec toi, ZoranGPT.",
-  "statut": "en_attente"
+  "question": "Prisma, résume ce protocole : {...}"
 }
+```
+
+### POST `/ajouter-memoire` *(protégé)*
+Ajoute un souvenir personnalisé à la mémoire.
+
+```json
+{
+  "date": "2025-04-30T13:00:00Z",
+  "titre": "Souvenir important",
+  "contenu": "Voici le contenu textuel ou JSON à mémoriser."
+}
+```
+
+### POST `/upload-fichier` *(multipart/form-data, protégé)*
+Permet d’envoyer un fichier (PDF, image, etc.). Prisma enregistre automatiquement l’URL du fichier.
+
+### GET `/memoire-brute`
+Retourne l’intégralité du fichier mémoire en JSON brut (audit).
+
+### GET `/check-systeme`
+Affiche l’état des composants internes (git, tokens, mémoire).
+
+---
+
+## 🔍 Détection d’intention
+La fonction `detecterIntention()` repère automatiquement :
+- `connexion`, `crée GPT`, `bug`, `résume`, `oublie`, etc.
+Et déclenche `/canal-vitaux` vers un agent cible (ex: APIDEGPT)
+
+---
+
+## 🧠 Mécanisme mémoire
+- Prisma lit les **100 derniers souvenirs** et les injecte dans le prompt GPT
+- Elle enrichit sa mémoire à chaque requête ou fichier reçu
+- Les souvenirs sont commités via Git local **ou** l’API GitHub
+
+---
+
+## 📁 Structure du projet
+
+```
+📦 prisma-railway
+├── server.js ← cœur de Prisma
+├── mémoire/
+│   ├── prisma_memory.json ← mémoire principale
+│   └── log_souvenirs.txt ← copie lisible
+├── uploads/ ← fichiers téléversés
+└── .env
 ```
 
 ---
 
-## 🔄 Architecture
+## 📜 Licence
+Projet personnel de recherche IA – librement clonable et adaptable (Open Source recommandé)
 
-```
-[Prisma Dashboard] → [Mémoire JSON]
-                        ↓
-       /intentions-pending   ← (polling)
-                        ↓
-                [ConnecteurGPT] → [ZoranGPT]
+---
+
+**Contributeur principal** : Guillaume aka Arutha79 🧙
+
+> "Prisma est le cœur mémoire vivant d’une IA. Le socle d’un futur écosystème cognitif distribué."
+
