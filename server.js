@@ -1,4 +1,4 @@
-// ✅ server.js complet avec /poser-question, GitHub API, logs, Railway-compatible
+// ✅ server.js complet avec /poser-question, GitHub API, logs, Railway-compatible + /ping-memoire
 
 const express = require("express");
 const morgan = require("morgan");
@@ -24,7 +24,6 @@ app.use(express.json());
 app.use(morgan("dev"));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 🔐 Sécurité API simple sur endpoints sensibles
 app.use((req, res, next) => {
   const sensibles = ["/ajouter-memoire", "/upload-fichier"];
   if (sensibles.includes(req.path)) {
@@ -133,66 +132,10 @@ async function ajouterMemoireAuto(question, réponse) {
   }
 }
 
-function injecterSouvenirInitialVitaux() {
-  try {
-    const bloc = {
-      date: "2025-04-13T20:00:00Z",
-      type: "instruction",
-      titre: "Communication avec les GPT Vitaux",
-      contenu: "Depuis avril 2025, tu es capable de communiquer avec les agents GPT Vitaux via une route API nommée /canal-vitaux..."
-    };
-    const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
-    const existe = data.historique.find(b => b.titre === bloc.titre);
-    if (!existe) {
-      data.historique.push(bloc);
-      fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
-      console.log("📌 Souvenir instruction GPT Vitaux injecté.");
-    }
-  } catch (e) {
-    console.warn("⚠️ Échec injection mémoire vitaux:", e.message);
-  }
-}
-
-injecterSouvenirInitialVitaux();
-
-app.post("/ajouter-memoire", async (req, res) => {
-  console.log("📩 Reçu POST /ajouter-memoire:", req.body);
-  const { date, titre, contenu } = req.body;
-  if (!date || !titre || !contenu) return res.status(400).json({ erreur: "Champs requis manquants." });
-  try {
-    const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
-    console.log("🧱 Souvenirs avant:", data.historique.length);
-
-    const bloc = { date, titre, contenu };
-    data.historique.push(bloc);
-    fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
-    console.log("🧱 Souvenirs après:", data.historique.length);
-
-    fs.appendFileSync(path.join(MEMORY_DIR, "log_souvenirs.txt"), `[${date}] ${titre} : ${contenu}\n\n`, "utf-8");
-    console.log("🧠 Souvenir enregistré dans la mémoire Prisma.");
-
-    if (estRepoGit()) {
-      exec(`git add ${PRIMARY_MEMORY} && git commit -m "🧠 Nouveau souvenir: ${titre}" && git push`, (err, stdout, stderr) => {
-        if (err) console.error("❌ Git erreur:", err.message);
-        else console.log("✅ Git push réussi:", stdout);
-      });
-    } else {
-      console.log("⚠️ Git désactivé (pas de .git dans l'environnement)");
-    }
-
-    await actionneurVivante({ date, titre, contenu });
-    res.json({ statut: "✅ Souvenir enregistré dans la mémoire Prisma." });
-  } catch (err) {
-    console.error("❌ Erreur ajout mémoire:", err);
-    res.status(500).json({ erreur: "Échec ajout mémoire." });
-  }
-});
-
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
   if (!question) return res.status(400).json({ erreur: "❗ Aucune question reçue." });
 
-  // 🧠 Enregistrer la question brute de l'utilisateur
   await ajouterMemoireAuto("Souvenir brut utilisateur", question);
 
   try {
@@ -233,49 +176,21 @@ app.post("/poser-question", async (req, res) => {
   }
 });
 
-const multer = require("multer");
-const upload = multer({ dest: path.join(__dirname, "uploads") });
-
-app.post("/upload-fichier", upload.single("fichier"), async (req, res) => {
-  if (!req.file) return res.status(400).json({ erreur: "Aucun fichier reçu." });
-  const chemin = `/uploads/${req.file.filename}`;
-  const url = `${req.protocol}://${req.get("host")}${chemin}`;
-  const bloc = {
-    date: new Date().toISOString(),
-    titre: `Fichier téléversé : ${req.file.originalname}`,
-    contenu: `Fichier stocké : ${url}`
-  };
-  const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
-  data.historique.push(bloc);
-  fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
-  res.json({ message: "✅ Fichier enregistré", url });
-});
-
-app.get("/memoire-brute", (req, res) => {
+app.get("/ping-memoire", (req, res) => {
   try {
-    const contenu = fs.readFileSync(PRIMARY_MEMORY, "utf-8");
-    res.setHeader("Content-Type", "text/plain");
-    res.send(contenu);
-  } catch (e) {
-    res.status(500).send("❌ Erreur lecture mémoire brute.");
+    const memory = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
+    res.json({
+      message: "✅ Mémoire Prisma accessible.",
+      total: memory.historique?.length || 0,
+      dernier_titre: memory.historique?.at(-1)?.titre || "Aucun souvenir"
+    });
+  } catch (err) {
+    console.error("❌ Erreur lecture mémoire:", err.message);
+    res.status(500).json({ erreur: "Échec lecture mémoire." });
   }
-});
-
-app.get("/check-systeme", async (req, res) => {
-  const info = {
-    git_repo: estRepoGit(),
-    github_token: !!process.env.GITHUB_TOKEN,
-    mémoire_existe: fs.existsSync(PRIMARY_MEMORY),
-    nombre_souvenirs: 0,
-    dernier_commit_git: null
-  };
-  try {
-    const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
-    info.nombre_souvenirs = data.historique.length;
-  } catch {}
-  res.json(info);
 });
 
 app.listen(PORT, () => {
   console.log(`✅ Prisma est en ligne sur le port ${PORT}`);
 });
+
