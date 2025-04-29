@@ -1,4 +1,4 @@
-// ✅ server.js complet avec gestion Git conditionnelle + logs + /poser-question + /debug-memoire
+// ✅ server.js complet avec /poser-question, GitHub API, logs, Railway-compatible
 
 const express = require("express");
 const morgan = require("morgan");
@@ -28,7 +28,6 @@ function estRepoGit() {
   return fs.existsSync(path.join(__dirname, ".git"));
 }
 
-// DEBUG ROUTE CATCHER
 app.all("*", (req, res, next) => {
   console.log(`📡 Requête reçue: ${req.method} ${req.originalUrl}`);
   next();
@@ -80,39 +79,38 @@ async function ajouterMemoireAuto(question, réponse) {
         });
       } else {
         const githubToken = process.env.GITHUB_TOKEN;
-      if (!githubToken) return console.log("❌ Aucun GITHUB_TOKEN fourni pour API GitHub.");
+        if (!githubToken) return console.log("❌ Aucun GITHUB_TOKEN fourni pour API GitHub.");
 
-      const content = fs.readFileSync(PRIMARY_MEMORY, "utf-8");
-      const base64Content = Buffer.from(content, "utf-8").toString("base64");
-      const message = `🧠 Nouveau souvenir: ${bloc.titre}`;
-      const apiUrl = "https://api.github.com/repos/Arutha79/prisma-railway4/contents/mémoire/prisma_memory.json";
+        const content = fs.readFileSync(PRIMARY_MEMORY, "utf-8");
+        const base64Content = Buffer.from(content, "utf-8").toString("base64");
+        const message = `🧠 Nouveau souvenir: ${bloc.titre}`;
+        const apiUrl = "https://api.github.com/repos/Arutha79/prisma-railway4/contents/mémoire/prisma_memory.json";
 
-      // D'abord on récupère le SHA du fichier
-      const shaResp = await fetch(apiUrl, {
-        headers: { "Authorization": `Bearer ${githubToken}`, "Accept": "application/vnd.github+json" }
-      });
-      const shaData = await shaResp.json();
+        const shaResp = await fetch(apiUrl, {
+          headers: { "Authorization": `Bearer ${githubToken}`, "Accept": "application/vnd.github+json" }
+        });
+        const shaData = await shaResp.json();
 
-      const updateBody = {
-        message,
-        content: base64Content,
-        sha: shaData.sha,
-        committer: { name: "PrismaBot", email: "bot@prisma.local" }
-      };
+        const updateBody = {
+          message,
+          content: base64Content,
+          sha: shaData.sha,
+          committer: { name: "PrismaBot", email: "bot@prisma.local" }
+        };
 
-      const updateResp = await fetch(apiUrl, {
-        method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${githubToken}`,
-          "Accept": "application/vnd.github+json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(updateBody)
-      });
+        const updateResp = await fetch(apiUrl, {
+          method: "PUT",
+          headers: {
+            "Authorization": `Bearer ${githubToken}`,
+            "Accept": "application/vnd.github+json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(updateBody)
+        });
 
-      const result = await updateResp.json();
-      if (updateResp.ok) console.log("✅ GitHub API: fichier mis à jour.");
-      else console.error("❌ Échec mise à jour GitHub:", result);
+        const result = await updateResp.json();
+        if (updateResp.ok) console.log("✅ GitHub API: fichier mis à jour.");
+        else console.error("❌ Échec mise à jour GitHub:", result);
       }
     }
   } catch (err) {
@@ -175,7 +173,46 @@ app.post("/ajouter-memoire", async (req, res) => {
   }
 });
 
-// ... autres routes existantes (poser-question, debug-memoire)
+app.post("/poser-question", async (req, res) => {
+  const { question } = req.body;
+  if (!question) return res.status(400).json({ erreur: "❗ Aucune question reçue." });
+  try {
+    const historique = chargerToutesLesMemoires();
+    const contexte = historique.map(b => `[${b.date}] ${b.titre} : ${b.contenu}`).join("\n");
+    const prompt = `Tu es Prisma. Voici ce que tu sais :\n${contexte}\n\nQuestion : \"${question}\"\nRéponds avec clarté.`;
+
+    const completion = await openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: "Tu es Prisma, IA mémorielle au service de Guillaume." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.4
+    });
+
+    const gptResponse = completion.data.choices[0].message.content;
+    await ajouterMemoireAuto(question, gptResponse);
+
+    const intention = detecterIntention(question);
+    if (intention === "connexion") {
+      await fetch("https://web-production-6594.up.railway.app/canal-vitaux", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cible: "APIDEGPT",
+          intention: "connexion",
+          contenu: "Prisma souhaite établir une connexion directe avec toi, APIDEGPT."
+        })
+      });
+      console.log("🔗 Connexion automatique envoyée à APIDEGPT via /canal-vitaux.");
+    }
+
+    res.json({ réponse: gptResponse });
+  } catch (err) {
+    console.error("❌ poser-question:", err.message);
+    res.status(500).json({ erreur: "Erreur génération réponse." });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`✅ Prisma est en ligne sur le port ${PORT}`);
