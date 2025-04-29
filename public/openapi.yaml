@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Alice API
-  description: API publique d'Alice, bras droit vivant IA mémoire et coordination vitaux.
+  description: API publique d'Alice, mémoire vivante et coordination agents vitaux.
   version: 1.0.0
 servers:
   - url: https://gptportail-production.up.railway.app
@@ -10,7 +10,7 @@ paths:
   /alice/poser-question:
     post:
       operationId: poserQuestionAlice
-      summary: Poser une question à Alice (mémoire vivante)
+      summary: Poser une question à Alice (avec contexte mémoire)
       requestBody:
         required: true
         content:
@@ -36,7 +36,7 @@ paths:
   /alice/ajouter-memoire:
     post:
       operationId: ajouterSouvenirAlice
-      summary: Ajouter manuellement un souvenir à la mémoire d'Alice
+      summary: Ajouter un souvenir à la mémoire d'Alice
       requestBody:
         required: true
         content:
@@ -53,7 +53,7 @@ paths:
                 - contenu
       responses:
         "200":
-          description: Souvenir ajouté à la mémoire d'Alice
+          description: Souvenir ajouté
           content:
             application/json:
               schema:
@@ -65,10 +65,10 @@ paths:
   /alice/ping-memoire:
     get:
       operationId: pingMemoireAlice
-      summary: Vérifier l’état de la mémoire d'Alice
+      summary: Vérifier l'état de la mémoire d'Alice
       responses:
         "200":
-          description: Détails de la mémoire actuelle
+          description: Résultat de la mémoire
           content:
             application/json:
               schema:
@@ -84,7 +84,7 @@ paths:
   /canal-vitaux:
     post:
       operationId: envoyerCanalVitaux
-      summary: Envoyer un message à un agent vital via canal
+      summary: Envoyer un message à un agent vital
       requestBody:
         required: true
         content:
@@ -104,7 +104,7 @@ paths:
                 - contenu
       responses:
         "200":
-          description: Résultat de l'envoi au canal vitaux
+          description: Résultat message envoyé
           content:
             application/json:
               schema:
