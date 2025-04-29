@@ -24,6 +24,18 @@ app.use(express.json());
 app.use(morgan("dev"));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// 🔐 Sécurité API simple sur endpoints sensibles
+app.use((req, res, next) => {
+  const sensibles = ["/ajouter-memoire", "/upload-fichier"];
+  if (sensibles.includes(req.path)) {
+    const token = req.headers["x-api-key"];
+    if (!token || token !== process.env.SECRET_TOKEN) {
+      return res.status(403).json({ erreur: "Non autorisé" });
+    }
+  }
+  next();
+});
+
 function estRepoGit() {
   return fs.existsSync(path.join(__dirname, ".git"));
 }
@@ -34,9 +46,12 @@ app.all("*", (req, res, next) => {
 });
 
 function detecterIntention(question) {
-  if (question.toLowerCase().includes("connexion")) {
-    return "connexion";
-  }
+  const q = question.toLowerCase();
+  if (/connecte|connexion|lien/.test(q)) return "connexion";
+  if (/crée|génère.*gpt/.test(q)) return "creer-gpt-metier";
+  if (/corrige|bug|erreur/.test(q)) return "correction";
+  if (/résume|synthèse/.test(q)) return "resume";
+  if (/supprime|efface|oublie/.test(q)) return "suppression";
   return "autre";
 }
 
@@ -176,6 +191,10 @@ app.post("/ajouter-memoire", async (req, res) => {
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
   if (!question) return res.status(400).json({ erreur: "❗ Aucune question reçue." });
+
+  // 🧠 Enregistrer la question brute de l'utilisateur
+  await ajouterMemoireAuto("Souvenir brut utilisateur", question);
+
   try {
     const historique = chargerToutesLesMemoires();
     const contexte = historique.map(b => `[${b.date}] ${b.titre} : ${b.contenu}`).join("\n");
@@ -212,6 +231,49 @@ app.post("/poser-question", async (req, res) => {
     console.error("❌ poser-question:", err.message);
     res.status(500).json({ erreur: "Erreur génération réponse." });
   }
+});
+
+const multer = require("multer");
+const upload = multer({ dest: path.join(__dirname, "uploads") });
+
+app.post("/upload-fichier", upload.single("fichier"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ erreur: "Aucun fichier reçu." });
+  const chemin = `/uploads/${req.file.filename}`;
+  const url = `${req.protocol}://${req.get("host")}${chemin}`;
+  const bloc = {
+    date: new Date().toISOString(),
+    titre: `Fichier téléversé : ${req.file.originalname}`,
+    contenu: `Fichier stocké : ${url}`
+  };
+  const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
+  data.historique.push(bloc);
+  fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
+  res.json({ message: "✅ Fichier enregistré", url });
+});
+
+app.get("/memoire-brute", (req, res) => {
+  try {
+    const contenu = fs.readFileSync(PRIMARY_MEMORY, "utf-8");
+    res.setHeader("Content-Type", "text/plain");
+    res.send(contenu);
+  } catch (e) {
+    res.status(500).send("❌ Erreur lecture mémoire brute.");
+  }
+});
+
+app.get("/check-systeme", async (req, res) => {
+  const info = {
+    git_repo: estRepoGit(),
+    github_token: !!process.env.GITHUB_TOKEN,
+    mémoire_existe: fs.existsSync(PRIMARY_MEMORY),
+    nombre_souvenirs: 0,
+    dernier_commit_git: null
+  };
+  try {
+    const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
+    info.nombre_souvenirs = data.historique.length;
+  } catch {}
+  res.json(info);
 });
 
 app.listen(PORT, () => {
