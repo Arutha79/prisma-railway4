@@ -58,7 +58,7 @@ function chargerToutesLesMemoires() {
   return historiqueGlobal.slice(-100);
 }
 
-function ajouterMemoireAuto(question, réponse) {
+async function ajouterMemoireAuto(question, réponse) {
   const bloc = {
     date: new Date().toISOString(),
     titre: `Échange avec Guillaume`,
@@ -84,7 +84,7 @@ function ajouterMemoireAuto(question, réponse) {
 
       const content = fs.readFileSync(PRIMARY_MEMORY, "utf-8");
       const base64Content = Buffer.from(content, "utf-8").toString("base64");
-      const message = `🧠 Nouveau souvenir: ${titre}`;
+      const message = `🧠 Nouveau souvenir: ${bloc.titre}`;
       const apiUrl = "https://api.github.com/repos/Arutha79/prisma-railway4/contents/mémoire/prisma_memory.json";
 
       // D'abord on récupère le SHA du fichier
