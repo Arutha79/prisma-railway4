@@ -79,7 +79,40 @@ function ajouterMemoireAuto(question, réponse) {
           else console.log("✅ Git push réussi:", stdout);
         });
       } else {
-        console.log("⚠️ Git désactivé (pas de .git dans l'environnement)");
+        const githubToken = process.env.GITHUB_TOKEN;
+      if (!githubToken) return console.log("❌ Aucun GITHUB_TOKEN fourni pour API GitHub.");
+
+      const content = fs.readFileSync(PRIMARY_MEMORY, "utf-8");
+      const base64Content = Buffer.from(content, "utf-8").toString("base64");
+      const message = `🧠 Nouveau souvenir: ${titre}`;
+      const apiUrl = "https://api.github.com/repos/Arutha79/prisma-railway4/contents/mémoire/prisma_memory.json";
+
+      // D'abord on récupère le SHA du fichier
+      const shaResp = await fetch(apiUrl, {
+        headers: { "Authorization": `Bearer ${githubToken}`, "Accept": "application/vnd.github+json" }
+      });
+      const shaData = await shaResp.json();
+
+      const updateBody = {
+        message,
+        content: base64Content,
+        sha: shaData.sha,
+        committer: { name: "PrismaBot", email: "bot@prisma.local" }
+      };
+
+      const updateResp = await fetch(apiUrl, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${githubToken}`,
+          "Accept": "application/vnd.github+json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(updateBody)
+      });
+
+      const result = await updateResp.json();
+      if (updateResp.ok) console.log("✅ GitHub API: fichier mis à jour.");
+      else console.error("❌ Échec mise à jour GitHub:", result);
       }
     }
   } catch (err) {
