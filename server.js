@@ -1,4 +1,4 @@
-// ✅ server.js complet avec /poser-question, GitHub API, logs, Railway-compatible + /ping-memoire
+// ✅ server.js complet avec /poser-question, GitHub API, logs, Railway-compatible + /ping-memoire + sécurité x-api-key
 
 const express = require("express");
 const morgan = require("morgan");
@@ -24,6 +24,7 @@ app.use(express.json());
 app.use(morgan("dev"));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// 🔐 Sécurité API
 app.use((req, res, next) => {
   const sensibles = ["/ajouter-memoire", "/upload-fichier"];
   if (sensibles.includes(req.path)) {
@@ -40,7 +41,7 @@ function estRepoGit() {
 }
 
 app.all("*", (req, res, next) => {
-  console.log(📡 Requête reçue: ${req.method} ${req.originalUrl});
+  console.log(`📡 Requête reçue: ${req.method} ${req.originalUrl}`);
   next();
 });
 
@@ -74,8 +75,8 @@ function chargerToutesLesMemoires() {
 async function ajouterMemoireAuto(question, réponse) {
   const bloc = {
     date: new Date().toISOString(),
-    titre: Échange avec Guillaume,
-    contenu: Q: ${question}\nR: ${réponse}
+    titre: `Échange avec Guillaume`,
+    contenu: `Q: ${question}\nR: ${réponse}`
   };
   try {
     const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
@@ -83,11 +84,11 @@ async function ajouterMemoireAuto(question, réponse) {
     if (!existeDeja) {
       data.historique.push(bloc);
       fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
-      fs.appendFileSync(path.join(MEMORY_DIR, "log_souvenirs.txt"), [${bloc.date}] ${bloc.titre} : ${bloc.contenu}\n\n, "utf-8");
+      fs.appendFileSync(path.join(MEMORY_DIR, "log_souvenirs.txt"), `[${bloc.date}] ${bloc.titre} : ${bloc.contenu}\n\n`, "utf-8");
       console.log("🧠 Souvenir ajouté automatiquement.");
 
       if (estRepoGit()) {
-        exec(git add ${PRIMARY_MEMORY} && git commit -m "🧠 Auto-souvenir: ${bloc.titre}" && git push, (err, stdout, stderr) => {
+        exec(`git add ${PRIMARY_MEMORY} && git commit -m "🧠 Auto-souvenir: ${bloc.titre}" && git push`, (err, stdout, stderr) => {
           if (err) console.error("❌ Git erreur:", err.message);
           else console.log("✅ Git push réussi:", stdout);
         });
@@ -97,11 +98,11 @@ async function ajouterMemoireAuto(question, réponse) {
 
         const content = fs.readFileSync(PRIMARY_MEMORY, "utf-8");
         const base64Content = Buffer.from(content, "utf-8").toString("base64");
-        const message = 🧠 Nouveau souvenir: ${bloc.titre};
+        const message = `🧠 Nouveau souvenir: ${bloc.titre}`;
         const apiUrl = "https://api.github.com/repos/Arutha79/prisma-railway4/contents/mémoire/prisma_memory.json";
 
         const shaResp = await fetch(apiUrl, {
-          headers: { "Authorization": Bearer ${githubToken}, "Accept": "application/vnd.github+json" }
+          headers: { "Authorization": `Bearer ${githubToken}`, "Accept": "application/vnd.github+json" }
         });
         const shaData = await shaResp.json();
 
@@ -115,7 +116,7 @@ async function ajouterMemoireAuto(question, réponse) {
         const updateResp = await fetch(apiUrl, {
           method: "PUT",
           headers: {
-            "Authorization": Bearer ${githubToken},
+            "Authorization": `Bearer ${githubToken}`,
             "Accept": "application/vnd.github+json",
             "Content-Type": "application/json"
           },
@@ -140,8 +141,8 @@ app.post("/poser-question", async (req, res) => {
 
   try {
     const historique = chargerToutesLesMemoires();
-    const contexte = historique.map(b => [${b.date}] ${b.titre} : ${b.contenu}).join("\n");
-    const prompt = Tu es Prisma. Voici ce que tu sais :\n${contexte}\n\nQuestion : \"${question}\"\nRéponds avec clarté.;
+    const contexte = historique.map(b => `[${b.date}] ${b.titre} : ${b.contenu}`).join("\n");
+    const prompt = `Tu es Prisma. Voici ce que tu sais :\n${contexte}\n\nQuestion : \"${question}\"\nRéponds avec clarté.`;
 
     const completion = await openai.createChatCompletion({
       model: "gpt-4",
@@ -191,5 +192,5 @@ app.get("/ping-memoire", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(✅ Prisma est en ligne sur le port ${PORT});
+  console.log(`✅ Prisma est en ligne sur le port ${PORT}`);
 });
