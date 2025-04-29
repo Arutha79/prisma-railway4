@@ -1,16 +1,16 @@
 openapi: 3.1.0
 info:
-  title: Prisma API
-  description: API publique de Prisma, moteur mémoire IA du Super Cerveau.
+  title: Alice API
+  description: API publique d'Alice, bras droit vivant IA mémoire et coordination vitaux.
   version: 1.0.0
 servers:
-  - url: https://web-production-6594.up.railway.app
+  - url: https://gptportail-production.up.railway.app
 
 paths:
-  /poser-question:
+  /alice/poser-question:
     post:
-      operationId: poserQuestion
-      summary: Poser une question à Prisma (mémoire intégrée)
+      operationId: poserQuestionAlice
+      summary: Poser une question à Alice (mémoire vivante)
       requestBody:
         required: true
         content:
@@ -24,19 +24,19 @@ paths:
                 - question
       responses:
         "200":
-          description: Réponse de Prisma
+          description: Réponse d'Alice
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  réponse:
+                  reponse:
                     type: string
 
-  /ajouter-memoire:
+  /alice/ajouter-memoire:
     post:
-      operationId: ajouterMemoire
-      summary: Ajouter un souvenir à la mémoire de Prisma
+      operationId: ajouterSouvenirAlice
+      summary: Ajouter manuellement un souvenir à la mémoire d'Alice
       requestBody:
         required: true
         content:
@@ -44,20 +44,16 @@ paths:
             schema:
               type: object
               properties:
-                date:
-                  type: string
-                  format: date-time
                 titre:
                   type: string
                 contenu:
                   type: string
               required:
-                - date
                 - titre
                 - contenu
       responses:
         "200":
-          description: Souvenir ajouté
+          description: Souvenir ajouté à la mémoire d'Alice
           content:
             application/json:
               schema:
@@ -66,13 +62,13 @@ paths:
                   statut:
                     type: string
 
-  /ping-memoire:
+  /alice/ping-memoire:
     get:
-      operationId: pingMemoire
-      summary: Vérifie l’état de la mémoire de Prisma
+      operationId: pingMemoireAlice
+      summary: Vérifier l’état de la mémoire d'Alice
       responses:
         "200":
-          description: Retourne une question test et la mémoire
+          description: Détails de la mémoire actuelle
           content:
             application/json:
               schema:
@@ -80,7 +76,41 @@ paths:
                 properties:
                   message:
                     type: string
-                  question_test:
+                  total:
+                    type: integer
+                  dernier_titre:
                     type: string
-                  réponse_attendue:
+
+  /canal-vitaux:
+    post:
+      operationId: envoyerCanalVitaux
+      summary: Envoyer un message à un agent vital via canal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                agent_cible:
+                  type: string
+                intention:
+                  type: string
+                contenu:
+                  type: string
+              required:
+                - agent_cible
+                - intention
+                - contenu
+      responses:
+        "200":
+          description: Résultat de l'envoi au canal vitaux
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statut:
                     type: string
+                  retour:
+                    type: object
