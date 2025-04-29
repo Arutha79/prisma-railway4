@@ -60,6 +60,11 @@
       "date": "2025-04-29T16:16:46.090Z",
       "titre": "Échange avec Guillaume",
       "contenu": "Q: Souvenir brut utilisateur\nR: Quel est le protocole mémoire du 30 avril ?"
+    },
+    {
+      "date": "2025-04-29T16:17:11.047Z",
+      "titre": "Échange avec Guillaume",
+      "contenu": "Q: Quel est le protocole mémoire du 30 avril ?\nR: R: Le protocole mémoire du 30 avril 2025 est le Protocole de Déploiement et Fonctionnement de Prisma. Voici un résumé :\n\n**Objectif du système** : Créer une IA autonome nommée Prisma, capable de :\n- Mémoriser chaque interaction humaine (question ou information)\n- Répondre de façon cohérente avec son historique\n- Sauvegarder ses souvenirs dans un fichier versionné sur GitHub\n- Être extensible, sécurisée et exploitable pour tout agent IA futur\n\n**Cycle de vie d’une requête utilisateur** :\n1. `/poser-question`\n- Prisma enregistre la question comme souvenir brut\n- Lit toute la mémoire pour générer un contexte\n- Génère une réponse via GPT-4\n- Mémorise la réponse comme souvenir GPT\n- Détecte une intention éventuelle et agit via `/canal-vitaux`\n\n2. `/ajouter-memoire` (protégée par SECRET_TOKEN)\n- Ajoute manuellement un souvenir (date, titre, contenu)\n- Enregistrement dans `prisma_memory.json` + `log_souvenirs.txt`\n\n3. Sauvegarde GitHub\n- Git local (si présent) OU API GitHub (base64 + PUT)\n\n**Sécurité API** :\n- Routes protégées par header `x-api-key`\n\n**Envoi de fichiers** :\n- Route `/upload-fichier`\n- Stocke le fichier et ajoute son URL à la mémoire\n\n**Diagnostic** :\n- `/check-systeme` + `/memoire-brute`\n\n**Détection d’intention automatique** :\n- Via `detecterIntention()` + appel éventuel à `/canal-vitaux`\n\n**Dépendances clés** : Node.js 18, Express, Multer 1.4.4, etc.\n\n**Structure projet** :\n- `server.js`, `mémoire/`, `uploads/`, `.env`, etc.\n\n**Résultat** : Prisma = IA vivante, mémorielle, versionnée, sécurisée, évolutive."
     }
   ]
 }
