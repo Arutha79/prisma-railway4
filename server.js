@@ -1,4 +1,4 @@
-// ✅ server.js complet avec Git auto-push + logs
+// ✅ server.js complet avec Git auto-push + logs + debug complet + route /debug-memoire
 
 const express = require("express");
 const morgan = require("morgan");
@@ -23,6 +23,12 @@ const openai = new OpenAIApi(configuration);
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// DEBUG ROUTE CATCHER
+app.all("*", (req, res, next) => {
+  console.log(`📡 Requête reçue: ${req.method} ${req.originalUrl}`);
+  next();
+});
 
 function detecterIntention(question) {
   if (question.toLowerCase().includes("connexion")) {
@@ -69,7 +75,7 @@ function ajouterMemoireAuto(question, réponse) {
       });
     }
   } catch (err) {
-    console.error("❌ Erreur auto-mémoire:", err.message);
+    console.error("❌ Erreur auto-mémoire:", err);
   }
 }
 
@@ -96,13 +102,17 @@ function injecterSouvenirInitialVitaux() {
 injecterSouvenirInitialVitaux();
 
 app.post("/ajouter-memoire", async (req, res) => {
+  console.log("📩 Reçu POST /ajouter-memoire:", req.body);
   const { date, titre, contenu } = req.body;
   if (!date || !titre || !contenu) return res.status(400).json({ erreur: "Champs requis manquants." });
   try {
     const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
+    console.log("🧱 Souvenirs avant:", data.historique.length);
+
     const bloc = { date, titre, contenu };
     data.historique.push(bloc);
     fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
+    console.log("🧱 Souvenirs après:", data.historique.length);
 
     fs.appendFileSync(path.join(MEMORY_DIR, "log_souvenirs.txt"), `[${date}] ${titre} : ${contenu}\n\n`, "utf-8");
     console.log("🧠 Souvenir enregistré dans la mémoire Prisma.");
@@ -115,12 +125,20 @@ app.post("/ajouter-memoire", async (req, res) => {
     await actionneurVivante({ date, titre, contenu });
     res.json({ statut: "✅ Souvenir enregistré dans la mémoire Prisma." });
   } catch (err) {
-    console.error("❌ Erreur ajout mémoire:", err.message);
+    console.error("❌ Erreur ajout mémoire:", err);
     res.status(500).json({ erreur: "Échec ajout mémoire." });
   }
 });
 
-// ... les autres routes (poser-question, canal-vitaux, etc.) restent inchangées
+app.get("/debug-memoire", (req, res) => {
+  try {
+    const contenu = fs.readFileSync(PRIMARY_MEMORY, "utf-8");
+    res.setHeader("Content-Type", "application/json");
+    res.send(contenu);
+  } catch (e) {
+    res.status(500).json({ erreur: "Échec lecture mémoire" });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`✅ Prisma est en ligne sur le port ${PORT}`);
