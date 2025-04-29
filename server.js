@@ -1,4 +1,4 @@
-// ✅ server.js complet pour Prisma avec dashboard intégré
+// ✅ server.js complet pour Prisma avec Actionneur vivant intégré
 
 const express = require("express");
 const morgan = require("morgan");
@@ -7,6 +7,8 @@ const path = require("path");
 const fetch = require("node-fetch");
 const { Configuration, OpenAIApi } = require("openai");
 require("dotenv").config();
+
+const { actionneurVivante } = require("./actionneur"); // 🆕 Intégration Actionneur ici
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,7 +21,7 @@ const openai = new OpenAIApi(configuration);
 
 app.use(express.json());
 app.use(morgan("dev"));
-app.use(express.static(path.join(__dirname, 'public'))); // 📂 Sert le dashboard
+app.use(express.static(path.join(__dirname, 'public')));
 
 // 🔍 Détecteur d'intention simple
 function detecterIntention(question) {
@@ -122,7 +124,7 @@ app.get("/ping-memoire", (req, res) => {
   }
 });
 
-app.post("/ajouter-memoire", (req, res) => {
+app.post("/ajouter-memoire", async (req, res) => {
   const { date, titre, contenu } = req.body;
   if (!date || !titre || !contenu) return res.status(400).json({ erreur: "Champs requis manquants." });
   try {
@@ -131,6 +133,10 @@ app.post("/ajouter-memoire", (req, res) => {
     data.historique.push(bloc);
     fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
     res.json({ statut: "✅ Souvenir enregistré dans la mémoire Prisma." });
+
+    // 🔥 Ajout immédiat : déclencheur actionneur vivant
+    await actionneurVivante({ date, titre, contenu });
+
   } catch (err) {
     console.error("❌ Erreur ajout mémoire:", err.message);
     res.status(500).json({ erreur: "Échec ajout mémoire." });
