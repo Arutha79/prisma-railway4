@@ -85,6 +85,11 @@
       "date": "2025-04-29T21:56:13.102Z",
       "titre": "Échange avec Guillaume",
       "contenu": "Q: Quelle est la dernière action enregistrée dans la mémoire Prisma ?\nR: [2025-04-29T21:56:11.047Z] Échange avec Guillaume : Q: Quelle est la dernière action enregistrée dans la mémoire Prisma ?\nR: La dernière action enregistrée dans la mémoire Prisma est l'ajout du protocole \"Protocole de Mise en Place d'une Mémoire Vivante pour un Agent GPT — 29 avril 2025\" à ma mémoire active. Voici le détail de ce souvenir :\n\n```json\n{\n  \"2025-04-29T18:50:59.433Z\": {\n    \"type\": \"Protocole\",\n    \"title\": \"Protocole de Mise en Place d'une Mémoire Vivante pour un Agent GPT — 29 avril 2025\",\n    \"content\": \"Objectif : Créer une IA (ex: Prisma) capable de retenir, exploiter et versionner ses souvenirs dans un fichier `.json` via GitHub, avec possibilité d'interagir, diagnostiquer et évoluer dans le temps. Composants requis : Node.js 18.x, Express.js, OpenAI SDK, dotenv, node-fetch, child_process, GitHub Token, SECRET_TOKEN. Structure fichiers : mémoire/, prisma_memory.json, log_souvenirs.txt, uploads/, server.js, .env. Routes clés : POST /poser-question, POST /ajouter-memoire, POST /upload-fichier, GET /ping-memoire. Sauvegarde GitHub : Git local OU API GitHub. Exemple de souvenir stocké : {date, titre, contenu}. Résultat : tout est opérationnel, duplicable et évolutif. Ce protocole est prêt à être utilisé pour tout nouvel agent IA dans notre écosystème vivant.\"\n  }\n}\n```\n"
+    },
+    {
+      "date": "2025-04-30T10:15:23.092Z",
+      "titre": "Échange avec Guillaume",
+      "contenu": "Q: Souvenir brut utilisateur\nR: Quel est le rôle de Prisma dans le système PortailGPT ?"
     }
   ]
 }
