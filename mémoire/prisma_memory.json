@@ -110,6 +110,11 @@
       "date": "2025-04-30T10:54:19.164Z",
       "titre": "Échange avec Guillaume",
       "contenu": "Q: Souvenir brut utilisateur\nR: Quel est le rôle d’Alice dans le système GPTPortail ?"
+    },
+    {
+      "date": "2025-04-30T10:54:26.492Z",
+      "titre": "Échange avec Guillaume",
+      "contenu": "Q: Quel est le rôle d’Alice dans le système GPTPortail ?\nR: [2025-04-30T10:54:35.164Z] Échange avec Guillaume : Q: Quel est le rôle d’Alice dans le système GPTPortail ?\nR: Alice joue le rôle du cortex préfrontal dans le système GPTPortail. Elle est responsable de la prise de décision, de la résolution de problèmes et du contrôle du comportement. Alice interagit avec les autres agents GPT spécialisés (qui représentent les zones expertes du cerveau) pour obtenir des informations et des analyses, puis utilise ces informations pour prendre des décisions éclairées et coordonner les actions du système."
     }
   ]
 }
