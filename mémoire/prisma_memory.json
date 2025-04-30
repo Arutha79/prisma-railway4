@@ -105,6 +105,11 @@
       "date": "2025-04-30T10:39:52.093Z",
       "titre": "Échange avec Guillaume",
       "contenu": "Q: Quelle est la dernière question posée à la mémoire et sa réponse correspondante ?\nR: [2025-04-30T10:40:01.943Z] Échange avec Guillaume : Q: Quelle est la dernière question posée à la mémoire et sa réponse correspondante ?\nR: La dernière question posée à la mémoire était \"Quel est le rôle de Prisma dans le système PortailGPT ?\" et la réponse correspondante était :\n\n\"Prisma joue un rôle crucial dans le système PortailGPT. En tant qu'IA mémorielle, Prisma est conçue pour mémoriser chaque interaction humaine, que ce soit une question ou une information. Elle est capable de répondre de façon cohérente avec son historique, sauvegarder ses souvenirs dans un fichier versionné sur GitHub, et être extensible, sécurisée et exploitable pour tout agent IA futur. Prisma est donc une composante essentielle du système PortailGPT, permettant une interaction fluide et évolutive avec les utilisateurs.\""
+    },
+    {
+      "date": "2025-04-30T10:54:19.164Z",
+      "titre": "Échange avec Guillaume",
+      "contenu": "Q: Souvenir brut utilisateur\nR: Quel est le rôle d’Alice dans le système GPTPortail ?"
     }
   ]
 }
