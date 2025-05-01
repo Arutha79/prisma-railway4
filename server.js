@@ -1,5 +1,3 @@
-// ✅ server.js complet pour Prisma avec déclencheur automatique vers ConnecteurGPT
-
 const express = require("express");
 const morgan = require("morgan");
 const fs = require("fs");
@@ -49,8 +47,8 @@ function chargerToutesLesMemoires() {
 function ajouterMemoireAuto(question, réponse) {
   const bloc = {
     date: new Date().toISOString(),
-    titre: Échange avec Guillaume,
-    contenu: Q: ${question}\nR: ${réponse}
+    titre: "Échange avec Guillaume",
+    contenu: `Q: ${question}\nR: ${réponse}`
   };
   try {
     const data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
@@ -108,8 +106,8 @@ app.post("/poser-question", async (req, res) => {
 
   try {
     const historique = chargerToutesLesMemoires();
-    const contexte = historique.map(b => [${b.date}] ${b.titre} : ${b.contenu}).join("\n");
-    const prompt = Tu es Prisma. Voici ce que tu sais :\n${contexte}\n\nQuestion : \"${question}\"\nRéponds avec clarté.;
+    const contexte = historique.map(b => `[${b.date}] ${b.titre} : ${b.contenu}`).join("\n");
+    const prompt = `Tu es Prisma. Voici ce que tu sais :\n${contexte}\n\nQuestion : "${question}"\nRéponds avec clarté.`;
 
     const completion = await openai.createChatCompletion({
       model: "gpt-4",
@@ -121,78 +119,3 @@ app.post("/poser-question", async (req, res) => {
     });
 
     const gptResponse = completion.data.choices[0].message.content;
-    ajouterMemoireAuto(question, gptResponse);
-
-    // 🚀 Déclencheur automatique si intention = connexion
-    const intention = detecterIntention(question);
-    if (intention === "connexion") {
-      await fetch("https://web-production-6594.up.railway.app/canal-vitaux", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          cible: "zorangpt",
-          intention: "connexion",
-          contenu: "Prisma souhaite établir une connexion directe avec toi, ZoranGPT."
-        })
-      });
-      console.log("🔗 Connexion automatique envoyée à ZoranGPT via /canal-vitaux.");
-    }
-
-    res.json({ réponse: gptResponse });
-  } catch (err) {
-    console.error("❌ poser-question:", err.message);
-    res.status(500).json({ erreur: "Erreur génération réponse." });
-  }
-});
-
-// Routes ConnecteurGPT
-app.post("/vers-connecteurgpt", async (req, res) => {
-  const { cible, intention, contenu } = req.body;
-  try {
-    const response = await fetch("https://connecteurgpt-production.up.railway.app/transmettre", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cible, intention, contenu })
-    });
-    const data = await response.json();
-    res.json({ statut: "✅ Transmis via ConnecteurGPT", retour: data });
-  } catch (err) {
-    console.error("❌ Erreur vers ConnecteurGPT:", err.message);
-    res.status(500).json({ erreur: "ConnecteurGPT inaccessible" });
-  }
-});
-
-app.post("/canal-vitaux", async (req, res) => {
-  const { cible, intention, contenu } = req.body;
-  try {
-    const response = await fetch("https://connecteurgpt-production.up.railway.app/transmettre", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cible, intention, contenu })
-    });
-    const data = await response.json();
-    res.json({ statut: "✅ Transmis via canal-vitaux", retour: data });
-  } catch (err) {
-    console.error("❌ canal-vitaux:", err.message);
-    res.status(500).json({ erreur: "Échec canal-vitaux" });
-  }
-});
-
-app.get("/check-connecteurgpt", async (req, res) => {
-  try {
-    const test = await fetch("https://connecteurgpt-production.up.railway.app/");
-    const texte = await test.text();
-    res.json({ connecté: true, message: texte });
-  } catch (err) {
-    console.error("❌ ConnecteurGPT inaccessible :", err.message);
-    res.status(500).json({ connecté: false, erreur: err.message });
-  }
-});
-
-app.get("/", (req, res) => {
-  res.send("🚀 Prisma est en ligne.");
-});
-
-app.listen(PORT, () => {
-  console.log(✅ Prisma est en ligne sur le port ${PORT});
-});
