@@ -1,46 +1,33 @@
-import fs from 'fs';
-import path from 'path';
+const fs = require("fs");
+const path = require("path");
 
-const MEMOIRE_PATH = path.resolve('mémoire/prisma_memory.json');
-const LOG_PATH = path.resolve('mémoire/log_souvenirs.txt');
+const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
+const LOG_PATH = path.resolve("mémoire/log_souvenirs.txt");
 
-/**
- * Ajoute un souvenir dans la mémoire persistante
- * Format attendu :
- * {
- *   historique: [
- *     { date, titre, contenu, type }
- *   ]
- * }
- */
-export function ajouterSouvenir(date, titre, contenu, type = 'souvenir') {
+function ajouterSouvenir(date, titre, contenu, type = "souvenir") {
   try {
-    // Lire ou initier la mémoire
     const data = fs.existsSync(MEMOIRE_PATH)
-      ? JSON.parse(fs.readFileSync(MEMOIRE_PATH, 'utf-8'))
+      ? JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"))
       : { historique: [] };
 
-    // Vérifie si le souvenir existe déjà (évite les doublons)
     const existe = data.historique.some(
-      e => e.titre === titre && e.contenu === contenu
+      (e) => e.titre === titre && e.contenu === contenu
     );
-
     if (!existe) {
       const bloc = { date, titre, contenu, type };
       data.historique.push(bloc);
+      fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), "utf-8");
 
-      // Sauvegarde dans le fichier JSON
-      fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), 'utf-8');
-
-      // Ajout dans le log texte lisible
       const log = `🧠 ${date} — ${titre}\n${contenu}\n\n`;
-      fs.appendFileSync(LOG_PATH, log, 'utf-8');
+      fs.appendFileSync(LOG_PATH, log, "utf-8");
 
-      console.log(`✅ Souvenir enregistré : ${titre}`);
+      console.log(`✅ Souvenir ajouté : ${titre}`);
     } else {
-      console.log("⚠️ Souvenir déjà présent, rien ajouté.");
+      console.log("⚠️ Déjà présent, rien ajouté.");
     }
   } catch (err) {
-    console.error('❌ Erreur écriture mémoire :', err);
+    console.error("❌ Erreur écriture mémoire :", err.message);
   }
 }
+
+module.exports = { ajouterSouvenir };
