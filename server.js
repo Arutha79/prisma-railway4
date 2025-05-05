@@ -8,7 +8,7 @@ const fetch = require("node-fetch");
 const multer = require("multer");
 const { execSync } = require("child_process");
 const { Configuration, OpenAIApi } = require("openai");
-const { filtrerMemoireParSujet } = require("./core/memoire_filtree.js");
+const { filtrerMemoireParSujet } = require("./noyau/modes/memoire_filtree.js");
 require("dotenv").config();
 
 const app = express();
