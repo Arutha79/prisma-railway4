@@ -8,7 +8,7 @@ const { execSync } = require("child_process");
 const { Configuration, OpenAIApi } = require("openai");
 
 const { filtrerMemoireParSujet } = require("./core/modes/memoire_filtree.js");
-const { ajouterMemoireFichier } = require("./core/memoire/ajouterMemoireFichier.js"); // ✅ chemin corrigé
+const { ajouterMemoireFichier } = require("./core/modes/ajouterMemoireFichier.js"); // ✅ Chemin corrigé ici
 
 require("dotenv").config();
 
