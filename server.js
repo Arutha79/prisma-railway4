@@ -8,7 +8,7 @@ const { execSync } = require("child_process");
 const { Configuration, OpenAIApi } = require("openai");
 
 const { filtrerMemoireParSujet } = require("./core/modes/memoire_filtree.js");
-const { ajouterMemoireFichier } = require("./utils/memoire.js"); // ✅ Ajout du vrai module mémoire
+const { ajouterSouvenir } = require("./core/modes/memoire.js"); // ✅ corrigé ici
 
 require("dotenv").config();
 
@@ -101,11 +101,11 @@ app.post("/poser-question", async (req, res) => {
     const réponse = completion.data.choices[0].message.content;
 
     // ✅ Mémorisation réelle
-    ajouterMemoireFichier({
-      date: new Date().toISOString(),
-      titre: "Échange avec Guillaume",
-      contenu: `Q: ${question}\nR: ${réponse}`
-    });
+    ajouterSouvenir(
+      new Date().toISOString(),
+      "Échange avec Guillaume",
+      `Q: ${question}\nR: ${réponse}`
+    );
 
     sauvegarderMemoireGit();
 
@@ -136,7 +136,7 @@ app.post("/ajouter-memoire", verifierToken, (req, res) => {
   }
 
   try {
-    ajouterMemoireFichier({ date, titre, contenu });
+    ajouterSouvenir(date, titre, contenu);
     sauvegarderMemoireGit();
     res.json({ succès: true });
   } catch (err) {
