@@ -8,7 +8,7 @@ const { execSync } = require("child_process");
 const { Configuration, OpenAIApi } = require("openai");
 
 const { filtrerMemoireParSujet } = require("./core/modes/memoire_filtree.js");
-const { ajouterMemoireFichier } = require("./core/modes/ajouterMemoireFichier.js"); // ✅ Chemin corrigé ici
+const { ajouterMemoireFichier } = require("./core/modes/ajouterMemoireFichier.js"); // ✅ bon chemin
 
 require("dotenv").config();
 
@@ -42,7 +42,7 @@ function detecterIntention(question) {
   return "autre";
 }
 
-// 💾 Push GitHub si GITHUB_TOKEN dispo
+// 💾 GitHub push (optionnel)
 function sauvegarderMemoireGit() {
   try {
     const mémoirePath = path.join(__dirname, "mémoire", "prisma_memory.json");
@@ -54,7 +54,7 @@ function sauvegarderMemoireGit() {
     } else if (GITHUB_TOKEN) {
       const contenu = fs.readFileSync(mémoirePath, "utf-8");
       const base64Content = Buffer.from(contenu).toString("base64");
-      const repo = "ton_user/ton_repo"; // ⚠️ Modifier ici
+      const repo = "ton_user/ton_repo"; // ⚠️ à personnaliser
       const chemin = "mémoire/prisma_memory.json";
 
       fetch(`https://api.github.com/repos/${repo}/contents/${chemin}`, {
@@ -79,7 +79,7 @@ function sauvegarderMemoireGit() {
   }
 }
 
-// 🧠 Pose une question à Prisma
+// 🧠 Route principale : poser une question
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
   if (!question) return res.status(400).json({ erreur: "Aucune question reçue." });
@@ -100,7 +100,7 @@ app.post("/poser-question", async (req, res) => {
 
     const réponse = completion.data.choices[0].message.content;
 
-    // ✅ Mémoire réelle sur disque
+    // ✅ Écriture réelle
     ajouterMemoireFichier({
       date: new Date().toISOString(),
       titre: "Échange avec Guillaume",
@@ -128,7 +128,7 @@ app.post("/poser-question", async (req, res) => {
   }
 });
 
-// 🔐 Ajout manuel de souvenir
+// ➕ Route d'ajout manuel
 app.post("/ajouter-memoire", verifierToken, (req, res) => {
   const { date, titre, contenu } = req.body;
   if (!date || !titre || !contenu) {
@@ -145,7 +145,7 @@ app.post("/ajouter-memoire", verifierToken, (req, res) => {
   }
 });
 
-// 🔎 Voir mémoire brute
+// 🔍 Lire le fichier mémoire
 app.get("/memoire-brute", (req, res) => {
   const mémoirePath = path.join(__dirname, "mémoire", "prisma_memory.json");
   try {
