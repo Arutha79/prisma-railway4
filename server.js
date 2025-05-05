@@ -1,4 +1,4 @@
-// 📁 server.js — version corrigée avec écriture mémoire garantie
+// 📁 server.js — version modifiée avec écriture mémoire garantie
 
 const express = require("express");
 const morgan = require("morgan");
@@ -8,7 +8,10 @@ const fetch = require("node-fetch");
 const multer = require("multer");
 const { execSync } = require("child_process");
 const { Configuration, OpenAIApi } = require("openai");
-const { filtrerMemoireParSujet } = require("./noyau/modes/memoire_filtree.js");
+
+// ✅ CHEMIN CORRIGÉ ICI
+const { filtrerMemoireParSujet } = require("./core/modes/memoire_filtree.js");
+
 require("dotenv").config();
 
 const app = express();
@@ -21,6 +24,7 @@ const UPLOADS_DIR = path.join(__dirname, "uploads");
 const cleApi = process.env.OPENAI_API_KEY;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const SECRET_TOKEN = process.env.SECRET_TOKEN;
+
 const configuration = new Configuration({ apiKey: cleApi });
 const openai = new OpenAIApi(configuration);
 
@@ -48,6 +52,7 @@ function ajouterBlocMemoire(bloc) {
       const contenu = fs.readFileSync(PRIMARY_MEMORY, "utf-8");
       data = JSON.parse(contenu);
     }
+
     const existeDeja = data.historique.some(b => b.contenu === bloc.contenu && b.titre === bloc.titre);
     if (!existeDeja) {
       data.historique.push(bloc);
@@ -71,8 +76,9 @@ function sauvegarderMemoireGit() {
     } else if (GITHUB_TOKEN) {
       const contenu = fs.readFileSync(PRIMARY_MEMORY, "utf-8");
       const base64Content = Buffer.from(contenu).toString("base64");
-      const repo = "ton_user/ton_repo"; // adapter ici
+      const repo = "ton_user/ton_repo"; // à personnaliser
       const chemin = "mémoire/prisma_memory.json";
+
       fetch(`https://api.github.com/repos/${repo}/contents/${chemin}`, {
         method: "PUT",
         headers: {
@@ -85,7 +91,8 @@ function sauvegarderMemoireGit() {
           content: base64Content,
           committer: { name: "Prisma", email: "prisma@ia.com" }
         })
-      }).then(res => res.json())
+      })
+        .then(res => res.json())
         .then(data => console.log("✅ Push GitHub API réussi."))
         .catch(e => console.warn("⚠️ GitHub API fail:", e.message));
     }
@@ -101,7 +108,7 @@ app.post("/poser-question", async (req, res) => {
   try {
     const contexteFiltré = filtrerMemoireParSujet(question, { limite: 30 });
     const contexte = contexteFiltré.map(b => `[${b.date}] ${b.titre} : ${b.contenu}`).join("\n");
-    const prompt = `Tu es Prisma. Voici ce que tu sais :\n${contexte}\n\nQuestion : \"${question}\"\nRéponds avec clarté.`;
+    const prompt = `Tu es Prisma. Voici ce que tu sais :\n${contexte}\n\nQuestion : "${question}"\nRéponds avec clarté.`;
 
     const completion = await openai.createChatCompletion({
       model: "gpt-4",
@@ -113,6 +120,7 @@ app.post("/poser-question", async (req, res) => {
     });
 
     const réponse = completion.data.choices[0].message.content;
+
     ajouterBlocMemoire({
       date: new Date().toISOString(),
       titre: "Échange avec Guillaume",
@@ -133,6 +141,7 @@ app.post("/poser-question", async (req, res) => {
 
     res.json({ réponse });
   } catch (err) {
+    console.error("❌ Erreur GPT:", err.message);
     res.status(500).json({ erreur: "Erreur réponse GPT." });
   }
 });
@@ -145,4 +154,8 @@ app.get("/memoire-brute", (req, res) => {
   } catch (err) {
     res.status(500).json({ erreur: "Impossible de lire la mémoire." });
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Serveur Prisma lancé sur http://localhost:${PORT}`);
 });
