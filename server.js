@@ -1,4 +1,4 @@
-// 📁 server.js — version modifiée avec filtrage mémoire
+// 📁 server.js — version corrigée avec chemins compatibles Railway et mémoire filtrée
 
 const express = require("express");
 const morgan = require("morgan");
@@ -8,7 +8,7 @@ const fetch = require("node-fetch");
 const multer = require("multer");
 const { execSync } = require("child_process");
 const { Configuration, OpenAIApi } = require("openai");
-const { filtrerMemoireParSujet } = require("./noyau/modes/memoire_filtree.js");
+const { filtrerMemoireParSujet } = require(path.join(__dirname, "noyau", "modes", "memoire_filtree.js"));
 require("dotenv").config();
 
 const app = express();
