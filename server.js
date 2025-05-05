@@ -8,7 +8,7 @@ const { execSync } = require("child_process");
 const { Configuration, OpenAIApi } = require("openai");
 
 const { filtrerMemoireParSujet } = require("./core/modes/memoire_filtree.js");
-const { ajouterSouvenir } = require("./core/modes/memoire.js"); // ✅ corrigé ici
+const { ajouterMemoireFichier } = require("./core/memoire/ajouterMemoireFichier.js"); // ✅ chemin corrigé
 
 require("dotenv").config();
 
@@ -100,12 +100,12 @@ app.post("/poser-question", async (req, res) => {
 
     const réponse = completion.data.choices[0].message.content;
 
-    // ✅ Mémorisation réelle
-    ajouterSouvenir(
-      new Date().toISOString(),
-      "Échange avec Guillaume",
-      `Q: ${question}\nR: ${réponse}`
-    );
+    // ✅ Mémoire réelle sur disque
+    ajouterMemoireFichier({
+      date: new Date().toISOString(),
+      titre: "Échange avec Guillaume",
+      contenu: `Q: ${question}\nR: ${réponse}`
+    });
 
     sauvegarderMemoireGit();
 
@@ -128,7 +128,7 @@ app.post("/poser-question", async (req, res) => {
   }
 });
 
-// 🔐 Ajout manuel de souvenir (sécurisé)
+// 🔐 Ajout manuel de souvenir
 app.post("/ajouter-memoire", verifierToken, (req, res) => {
   const { date, titre, contenu } = req.body;
   if (!date || !titre || !contenu) {
@@ -136,7 +136,7 @@ app.post("/ajouter-memoire", verifierToken, (req, res) => {
   }
 
   try {
-    ajouterSouvenir(date, titre, contenu);
+    ajouterMemoireFichier({ date, titre, contenu });
     sauvegarderMemoireGit();
     res.json({ succès: true });
   } catch (err) {
