@@ -1,10 +1,9 @@
-
-import fs from 'fs';
-import path from 'path';
+const fs = require('fs');
+const path = require('path');
 
 const PRIMARY_MEMORY = path.resolve('mémoire/prisma_memory.json');
 
-export function filtrerMemoireParSujet(sujet = '', options = {}) {
+function filtrerMemoireParSujet(sujet = '', options = {}) {
   const { parType = [], limite = 50 } = options;
   try {
     const raw = fs.readFileSync(PRIMARY_MEMORY, 'utf-8');
@@ -27,3 +26,5 @@ export function filtrerMemoireParSujet(sujet = '', options = {}) {
     return [];
   }
 }
+
+module.exports = { filtrerMemoireParSujet };
