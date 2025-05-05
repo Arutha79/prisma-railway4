@@ -16,22 +16,23 @@ function ajouterMemoireFichier({ date, titre, contenu, type = "souvenir" }) {
       : { historique: [] };
 
     const existe = data.historique.some(
-      e => e.titre === titre && e.contenu === contenu
+      (e) => e.titre === titre && e.contenu === contenu
     );
     if (!existe) {
       const bloc = { date, titre, contenu, type };
       data.historique.push(bloc);
+
       fs.writeFileSync(MEMORY_FILE, JSON.stringify(data, null, 2), "utf-8");
 
       const log = `[${date}] ${titre}\n${contenu}\n\n`;
       fs.appendFileSync(LOG_FILE, log, "utf-8");
 
-      console.log("✅ Mémoire enregistrée sur disque.");
+      console.log("✅ Mémoire écrite dans prisma_memory.json");
     } else {
-      console.log("⚠️ Souvenir déjà présent, ignoré.");
+      console.log("⚠️ Souvenir déjà présent. Ignoré.");
     }
   } catch (err) {
-    console.error("❌ Erreur mémoire :", err.message);
+    console.error("❌ Erreur d'écriture mémoire :", err.message);
   }
 }
 
