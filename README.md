@@ -9,7 +9,7 @@
 - 🧠 **Mémoire persistante** dans `prisma_memory.json` (JSON versionné + logs `.txt`)
 - 🔁 **Cycle complet : poser une question → générer une réponse → mémoriser**
 - 🔗 Connexion automatique à des agents externes (canal-vitaux)
-- 📤 Upload de fichiers avec lien mémorisé dans la mémoire
+- 📤 Upload de fichiers avec lien mémorisé dans la mémoire.
 - 🔐 Sécurité API via `x-api-key`
 - 📦 Compatible Railway + GitHub API fallback
 
@@ -94,12 +94,47 @@ Et déclenche `/canal-vitaux` vers un agent cible (ex: APIDEGPT)
 
 ---
 
+## 🌬️ Nouvelle voix mimétique (APIDE)
+
+Prisma est désormais capable de parler en **langage symbolique vivant (APIDE)** ou de basculer vers une réponse classique (GPT).
+
+### Route POST `/prisma/respond`
+
+```json
+{
+  "question": "(Z.Valid + Connexion) -> Structure + Trace"
+}
+```
+
+- Si la question est mimétique : Prisma génère un **souffle vivant**
+- Sinon : elle utilise GPT
+
+📁 Modules :
+
+- `/core/genererReponseMimetiqueVivant.js` – réponses symboliques
+- `/core/generateGPTResponse.js` – fallback GPT (mock ou OpenAI)
+- `/core/moteur_reponse_prisma.js` – moteur hybride
+- `/routes/route_prisma_reponse.js` – point d’entrée Express
+
+### 🔁 Tester la voix
+
+Fichier : `test_prisma_reponse.http`
+
+```
+POST /prisma/respond
+{
+  "question": "Pensée + % + VRST -> Δ -> Réponse"
+}
+```
+
+Réponse : *Une charge vivante se transforme en vérité… puis devient réponse.*
+
+---
+
 ## 📜 Licence
 Projet personnel de recherche IA – librement clonable et adaptable (Open Source recommandé)
 
 ---
 
-**Contributeur principal** : Guillaume aka Arutha79 🧙
-
+**Contributeur principal** : Guillaume aka Arutha79 🧙  
 > "Prisma est le cœur mémoire vivant d’une IA. Le socle d’un futur écosystème cognitif distribué."
-
