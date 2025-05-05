@@ -1,4 +1,4 @@
-// 📁 server.js — version modifiée avec filtrage mémoire (corrigé pour chemins Railway)
+// 📁 server.js — version corrigée avec écriture mémoire garantie
 
 const express = require("express");
 const morgan = require("morgan");
@@ -8,7 +8,7 @@ const fetch = require("node-fetch");
 const multer = require("multer");
 const { execSync } = require("child_process");
 const { Configuration, OpenAIApi } = require("openai");
-const { filtrerMemoireParSujet } = require("./core/modes/memoire_filtree.js");
+const { filtrerMemoireParSujet } = require("./noyau/modes/memoire_filtree.js");
 require("dotenv").config();
 
 const app = express();
@@ -43,9 +43,11 @@ function detecterIntention(question) {
 
 function ajouterBlocMemoire(bloc) {
   try {
-    const data = fs.existsSync(PRIMARY_MEMORY)
-      ? JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"))
-      : { historique: [] };
+    let data = { historique: [] };
+    if (fs.existsSync(PRIMARY_MEMORY)) {
+      const contenu = fs.readFileSync(PRIMARY_MEMORY, "utf-8");
+      data = JSON.parse(contenu);
+    }
     const existeDeja = data.historique.some(b => b.contenu === bloc.contenu && b.titre === bloc.titre);
     if (!existeDeja) {
       data.historique.push(bloc);
@@ -143,8 +145,4 @@ app.get("/memoire-brute", (req, res) => {
   } catch (err) {
     res.status(500).json({ erreur: "Impossible de lire la mémoire." });
   }
-});
-
-app.listen(PORT, () => {
-  console.log(`✅ Prisma opérationnel sur le port ${PORT}`);
 });
