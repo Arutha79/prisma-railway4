@@ -26,12 +26,12 @@ function ajouterMemoireFichier({ date, titre, contenu, type = "souvenir" }) {
       const log = `[${date}] ${titre}\n${contenu}\n\n`;
       fs.appendFileSync(LOG_FILE, log, "utf-8");
 
-      console.log("✅ Mémoire réellement enregistrée sur disque.");
+      console.log("✅ Mémoire enregistrée sur disque.");
     } else {
       console.log("⚠️ Souvenir déjà présent, ignoré.");
     }
   } catch (err) {
-    console.error("❌ Erreur d'écriture mémoire :", err.message);
+    console.error("❌ Erreur mémoire :", err.message);
   }
 }
 
