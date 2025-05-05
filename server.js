@@ -8,19 +8,18 @@ const { execSync } = require("child_process");
 const { Configuration, OpenAIApi } = require("openai");
 
 const { filtrerMemoireParSujet } = require("./core/modes/memoire_filtree.js");
+const { ajouterMemoireFichier } = require("./utils/memoire.js"); // ✅ Ajout du vrai module mémoire
 
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MEMORY_DIR = path.join(__dirname, "mémoire");
-const PRIMARY_MEMORY = path.join(MEMORY_DIR, "prisma_memory.json");
-const LOG_SOUVENIRS = path.join(MEMORY_DIR, "log_souvenirs.txt");
 const UPLOADS_DIR = path.join(__dirname, "uploads");
 
 const cleApi = process.env.OPENAI_API_KEY;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const SECRET_TOKEN = process.env.SECRET_TOKEN;
+
 const configuration = new Configuration({ apiKey: cleApi });
 const openai = new OpenAIApi(configuration);
 
@@ -29,7 +28,7 @@ app.use(morgan("dev"));
 app.use(express.static(path.join(__dirname, "public")));
 const upload = multer({ dest: UPLOADS_DIR });
 
-// 🔐 Middleware de sécurité
+// 🔐 Sécurité de l'API
 function verifierToken(req, res, next) {
   if (req.headers["x-api-key"] !== SECRET_TOKEN) {
     return res.status(403).json({ erreur: "Accès interdit : clé API invalide." });
@@ -43,41 +42,19 @@ function detecterIntention(question) {
   return "autre";
 }
 
-// 🧠 Écriture réelle en mémoire
-function ajouterSouvenir(date, titre, contenu) {
-  try {
-    if (!fs.existsSync(MEMORY_DIR)) fs.mkdirSync(MEMORY_DIR);
-    let data = { historique: [] };
-    if (fs.existsSync(PRIMARY_MEMORY)) {
-      data = JSON.parse(fs.readFileSync(PRIMARY_MEMORY, "utf-8"));
-    }
-
-    const existeDeja = data.historique.some(e => e.titre === titre && e.contenu === contenu);
-    if (!existeDeja) {
-      const bloc = { date, titre, contenu };
-      data.historique.push(bloc);
-      fs.writeFileSync(PRIMARY_MEMORY, JSON.stringify(data, null, 2), "utf-8");
-      fs.appendFileSync(LOG_SOUVENIRS, `[${date}] ${titre}\n${contenu}\n\n`, "utf-8");
-      console.log("✅ Souvenir ajouté sur disque.");
-      sauvegarderMemoireGit();
-    }
-  } catch (err) {
-    console.error("❌ ajout mémoire:", err.message);
-  }
-}
-
-// 💾 Commit ou push GitHub
+// 💾 Push GitHub si GITHUB_TOKEN dispo
 function sauvegarderMemoireGit() {
   try {
+    const mémoirePath = path.join(__dirname, "mémoire", "prisma_memory.json");
     if (fs.existsSync(".git")) {
       execSync("git add mémoire/prisma_memory.json");
       execSync('git commit -m "🧠 MAJ mémoire Prisma"');
       execSync("git push");
       console.log("✅ Push mémoire via Git local.");
     } else if (GITHUB_TOKEN) {
-      const contenu = fs.readFileSync(PRIMARY_MEMORY, "utf-8");
+      const contenu = fs.readFileSync(mémoirePath, "utf-8");
       const base64Content = Buffer.from(contenu).toString("base64");
-      const repo = "ton_user/ton_repo"; // 🎯 À personnaliser
+      const repo = "ton_user/ton_repo"; // ⚠️ Modifier ici
       const chemin = "mémoire/prisma_memory.json";
 
       fetch(`https://api.github.com/repos/${repo}/contents/${chemin}`, {
@@ -98,11 +75,11 @@ function sauvegarderMemoireGit() {
         .catch(e => console.warn("⚠️ GitHub API fail:", e.message));
     }
   } catch (e) {
-    console.warn("⚠️ Git local ou API échouée:", e.message);
+    console.warn("⚠️ Erreur push mémoire :", e.message);
   }
 }
 
-// 📥 Poser une question et mémoriser
+// 🧠 Pose une question à Prisma
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
   if (!question) return res.status(400).json({ erreur: "Aucune question reçue." });
@@ -123,11 +100,14 @@ app.post("/poser-question", async (req, res) => {
 
     const réponse = completion.data.choices[0].message.content;
 
-    ajouterSouvenir(
-      new Date().toISOString(),
-      "Échange avec Guillaume",
-      `Q: ${question}\nR: ${réponse}`
-    );
+    // ✅ Mémorisation réelle
+    ajouterMemoireFichier({
+      date: new Date().toISOString(),
+      titre: "Échange avec Guillaume",
+      contenu: `Q: ${question}\nR: ${réponse}`
+    });
+
+    sauvegarderMemoireGit();
 
     if (detecterIntention(question) === "connexion") {
       await fetch("https://web-production-6594.up.railway.app/canal-vitaux", {
@@ -148,7 +128,7 @@ app.post("/poser-question", async (req, res) => {
   }
 });
 
-// 🔐 Route d’ajout mémoire manuelle
+// 🔐 Ajout manuel de souvenir (sécurisé)
 app.post("/ajouter-memoire", verifierToken, (req, res) => {
   const { date, titre, contenu } = req.body;
   if (!date || !titre || !contenu) {
@@ -156,7 +136,8 @@ app.post("/ajouter-memoire", verifierToken, (req, res) => {
   }
 
   try {
-    ajouterSouvenir(date, titre, contenu);
+    ajouterMemoireFichier({ date, titre, contenu });
+    sauvegarderMemoireGit();
     res.json({ succès: true });
   } catch (err) {
     console.error("❌ Erreur ajout mémoire manuelle :", err.message);
@@ -164,10 +145,11 @@ app.post("/ajouter-memoire", verifierToken, (req, res) => {
   }
 });
 
-// 🧾 Retour mémoire brute
+// 🔎 Voir mémoire brute
 app.get("/memoire-brute", (req, res) => {
+  const mémoirePath = path.join(__dirname, "mémoire", "prisma_memory.json");
   try {
-    const data = fs.readFileSync(PRIMARY_MEMORY, "utf-8");
+    const data = fs.readFileSync(mémoirePath, "utf-8");
     res.setHeader("Content-Type", "application/json");
     res.send(data);
   } catch (err) {
@@ -175,7 +157,6 @@ app.get("/memoire-brute", (req, res) => {
   }
 });
 
-// 🚀 Lancer serveur
 app.listen(PORT, () => {
   console.log(`🚀 Serveur Prisma lancé sur http://localhost:${PORT}`);
 });
