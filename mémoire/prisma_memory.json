@@ -127,6 +127,18 @@
       "titre": "Réponse Prisma",
       "contenu": "🤖 (mock) Voici une réponse à ta question : Prisma, es-tu maintenant capable d’enregistrer un souvenir réel dans ta mémoire persistante (`prisma_memory.json`) ? Si oui, merci de me le confirmer. Sinon, dis-moi ce qui t’en empêche encore.",
       "type": "souvenir"
+    },
+    {
+      "date": "2025-05-06T21:10:29.191Z",
+      "titre": "Question utilisateur",
+      "contenu": "Prisma, peux-tu confirmer maintenant si tu es réellement capable d’enregistrer un souvenir dans ta mémoire persistante `prisma_memory.json` ? S’il te plaît, essaie vraiment, et dis-moi si l’écriture est effective ou non.",
+      "type": "souvenir"
+    },
+    {
+      "date": "2025-05-06T21:10:29.191Z",
+      "titre": "Réponse Prisma",
+      "contenu": "🤖 (mock) Voici une réponse à ta question : Prisma, peux-tu confirmer maintenant si tu es réellement capable d’enregistrer un souvenir dans ta mémoire persistante `prisma_memory.json` ? S’il te plaît, essaie vraiment, et dis-moi si l’écriture est effective ou non.",
+      "type": "souvenir"
     }
   ]
 }
