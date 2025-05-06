@@ -4,25 +4,26 @@ const fs = require("fs");
 const path = require("path");
 const bodyParser = require("body-parser");
 const fetch = require("node-fetch");
-const { ajouterSouvenir } = require("./memoire");
-const { ajouterMemoireFichier } = require("./ajouterMemoireFichier");
 require("dotenv").config();
+
+const { ajouterSouvenir } = require("./core/modes/memoire");
+const { ajouterMemoireFichier } = require("./core/modes/ajouterMemoireFichier");
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
 const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
-const repo = "Arutha79/prisma-railway4"; // 🔧 Ton vrai repo GitHub
+const repo = "Arutha79/prisma-railway4";
 const token = process.env.GITHUB_TOKEN;
 
-// ✅ Initialisation mémoire
+// 🧱 Création du dossier mémoire si manquant
 fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
 if (!fs.existsSync(MEMOIRE_PATH)) {
   fs.writeFileSync(MEMOIRE_PATH, JSON.stringify({ historique: [] }, null, 2), "utf-8");
 }
 
-// ✅ PING-MEMOIRE
+// ✅ Route de test mémoire
 app.get("/ping-memoire", (req, res) => {
   try {
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
@@ -36,7 +37,7 @@ app.get("/ping-memoire", (req, res) => {
   }
 });
 
-// ➕ Ajouter mémoire (sécurisé)
+// ➕ Ajouter mémoire sécurisée
 app.post("/ajouter-memoire", (req, res) => {
   const { date, titre, contenu } = req.body;
   const apiKey = req.headers["x-api-key"];
@@ -47,7 +48,7 @@ app.post("/ajouter-memoire", (req, res) => {
   res.json({ statut: "Souvenir ajouté" });
 });
 
-// 🧪 Poser une question à Prisma
+// 🤖 Poser une question à Prisma
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
   const date = new Date().toISOString();
@@ -61,12 +62,14 @@ app.post("/poser-question", async (req, res) => {
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
     const base64 = Buffer.from(content).toString("base64");
 
+    // 🔄 Récupération du SHA actuel
     const meta = await fetch(`https://api.github.com/repos/${repo}/contents/mémoire/prisma_memory.json`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     const metaData = await meta.json();
     const sha = metaData.sha;
 
+    // 💾 Sauvegarde GitHub
     await fetch(`https://api.github.com/repos/${repo}/contents/mémoire/prisma_memory.json`, {
       method: "PUT",
       headers: {
@@ -74,7 +77,7 @@ app.post("/poser-question", async (req, res) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        message: "Mise à jour mémoire Prisma",
+        message: "🧠 Mise à jour mémoire Prisma",
         content: base64,
         sha: sha
       })
