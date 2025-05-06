@@ -6,13 +6,14 @@ const LOG_PATH = path.resolve("mémoire/log_souvenirs.txt");
 
 function ajouterSouvenir(date, titre, contenu, type = "souvenir") {
   try {
-    const data = fs.existsSync(MEMOIRE_PATH)
-      ? JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"))
-      : { historique: [] };
+    fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
+    if (!fs.existsSync(MEMOIRE_PATH)) {
+      fs.writeFileSync(MEMOIRE_PATH, JSON.stringify({ historique: [] }, null, 2), "utf-8");
+    }
 
-    const existe = data.historique.some(
-      (e) => e.titre === titre && e.contenu === contenu
-    );
+    const data = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
+    const existe = data.historique.some(e => e.titre === titre && e.contenu === contenu);
+
     if (!existe) {
       const bloc = { date, titre, contenu, type };
       data.historique.push(bloc);
