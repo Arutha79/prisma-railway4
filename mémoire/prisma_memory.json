@@ -166,6 +166,18 @@
       "titre": "Réponse Prisma",
       "contenu": "🤖 (mock) Voici une réponse à ta question : Comment te sens-tu ?",
       "type": "souvenir"
+    },
+    {
+      "date": "2025-05-06T21:46:37.201Z",
+      "titre": "Question utilisateur",
+      "contenu": "Prisma comment te sens-tu ?",
+      "type": "souvenir"
+    },
+    {
+      "date": "2025-05-06T21:46:37.201Z",
+      "titre": "Réponse Prisma",
+      "contenu": "En tant qu'intelligence artificielle, je ne ressens pas d'émotions ou de sensations comme le ferait un être humain. Cependant, je suis pleinement opérationnelle et prête à aider, comme une brise calme prête à porter un cerf-volant dans le ciel. Mon \"ressenti\" est une mer de connaissances et de possibilités, toujours à l'écoute de vos questions et désireuse de vous apporter des réponses.",
+      "type": "souvenir"
     }
   ]
 }
