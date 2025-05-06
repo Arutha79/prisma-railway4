@@ -48,28 +48,41 @@ app.post("/ajouter-memoire", (req, res) => {
   res.json({ statut: "Souvenir ajouté" });
 });
 
-// 🤖 Poser une question à Prisma
+// 🤖 Poser une question à Prisma (avec logs mémoire)
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
   const date = new Date().toISOString();
-  if (!question) return res.status(400).json({ erreur: "Champ question manquant" });
+
+  if (!question) {
+    return res.status(400).json({ erreur: "Champ question manquant" });
+  }
 
   const reponse = `🤖 (mock) Voici une réponse à ta question : ${question}`;
-  ajouterSouvenir(date, "Question utilisateur", question);
-  ajouterSouvenir(date, "Réponse Prisma", reponse);
+
+  try {
+    ajouterSouvenir(date, "Question utilisateur", question);
+    console.log("✅ Question ajoutée à la mémoire");
+  } catch (e) {
+    console.error("❌ Erreur mémoire (question) :", e.message);
+  }
+
+  try {
+    ajouterSouvenir(date, "Réponse Prisma", reponse);
+    console.log("✅ Réponse ajoutée à la mémoire");
+  } catch (e) {
+    console.error("❌ Erreur mémoire (réponse) :", e.message);
+  }
 
   try {
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
     const base64 = Buffer.from(content).toString("base64");
 
-    // 🔄 Récupération du SHA actuel
     const meta = await fetch(`https://api.github.com/repos/${repo}/contents/mémoire/prisma_memory.json`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     const metaData = await meta.json();
     const sha = metaData.sha;
 
-    // 💾 Sauvegarde GitHub
     await fetch(`https://api.github.com/repos/${repo}/contents/mémoire/prisma_memory.json`, {
       method: "PUT",
       headers: {
@@ -82,6 +95,7 @@ app.post("/poser-question", async (req, res) => {
         sha: sha
       })
     });
+    console.log("✅ Mémoire poussée vers GitHub");
   } catch (err) {
     console.warn("❌ Push GitHub échoué :", err.message);
   }
