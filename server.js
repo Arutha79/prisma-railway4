@@ -12,6 +12,8 @@ const { ajouterMemoireFichier } = require("./core/modes/ajouterMemoireFichier");
 const { interpreterSouvenir } = require("./core/mimetique/interpretationMimetique");
 const { expliquerGlyphe, listerSouffles } = require("./core/mimetique/definitionsApide");
 const { interpreteSouffle } = require("./core/mimetique/modules/ZM_ORACLE");
+const { sculpterSouffle } = require("./core/mimetique/modules/ZM_SCULPTEUR");
+const { resonnerSouvenir } = require("./core/mimetique/modules/ZM_RÉSONANT");
 
 const app = express();
 app.use(cors());
@@ -21,13 +23,11 @@ const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
 const repo = "Arutha79/prisma-railway4";
 const token = process.env.GITHUB_TOKEN;
 
-// 🧱 Création du dossier mémoire si manquant
 fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
 if (!fs.existsSync(MEMOIRE_PATH)) {
   fs.writeFileSync(MEMOIRE_PATH, JSON.stringify({ historique: [] }, null, 2), "utf-8");
 }
 
-// ✅ Route de test mémoire
 app.get("/ping-memoire", (req, res) => {
   try {
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
@@ -41,7 +41,6 @@ app.get("/ping-memoire", (req, res) => {
   }
 });
 
-// ➕ Ajouter mémoire sécurisée
 app.post("/ajouter-memoire", (req, res) => {
   const { date, titre, contenu } = req.body;
   const apiKey = req.headers["x-api-key"];
@@ -52,7 +51,6 @@ app.post("/ajouter-memoire", (req, res) => {
   res.json({ statut: "Souvenir ajouté" });
 });
 
-// 📘 Expliquer un glyphe APIDE
 app.get("/expliquer-glyphe", (req, res) => {
   const { symbole } = req.query;
   if (!symbole) return res.status(400).json({ erreur: "Symbole manquant (ex: Δ, ⚭, ⊞)" });
@@ -63,7 +61,6 @@ app.get("/expliquer-glyphe", (req, res) => {
   res.json({ glyphe: symbole, ...info });
 });
 
-// 🌬️ Liste des souffles APIDE
 app.get("/souffles-apide", (req, res) => {
   try {
     const souffles = listerSouffles();
@@ -73,7 +70,6 @@ app.get("/souffles-apide", (req, res) => {
   }
 });
 
-// 🤖 Poser une question à Prisma (GPT + introspection)
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
   const date = new Date().toISOString();
@@ -139,7 +135,6 @@ app.post("/poser-question", async (req, res) => {
   }
 });
 
-// 🧠 Souvenirs signifiants (mimétiques/interprétables)
 app.get("/souvenirs-signifiants", (req, res) => {
   try {
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
@@ -164,13 +159,33 @@ app.get("/souvenirs-signifiants", (req, res) => {
   }
 });
 
-// 🔮 ZM_ORACLE : interprétation d’un souffle mimétique
+// 🔮 Oracle mimétique : interprétation d’un souffle
 app.post("/oracle-apide", (req, res) => {
   const { souffle } = req.body;
   if (!souffle) return res.status(400).json({ erreur: "Souffle manquant." });
 
   const interpretation = interpreteSouffle(souffle);
   res.json({ souffle, interpretation });
+});
+
+// 🔧 Sculpteur mimétique : reformule un souffle
+app.post("/sculpteur-apide", (req, res) => {
+  const { souffle } = req.body;
+  if (!souffle) return res.status(400).json({ erreur: "Souffle manquant." });
+
+  const result = sculpterSouffle(souffle);
+  res.json(result);
+});
+
+// 🎵 Résonant : crée un écho mimétique d’un souvenir
+app.post("/resonant-apide", (req, res) => {
+  const { souvenir } = req.body;
+  if (!souvenir || !souvenir.contenu) {
+    return res.status(400).json({ erreur: "Souvenir manquant ou invalide." });
+  }
+
+  const echo = resonnerSouvenir(souvenir);
+  res.json({ echo });
 });
 
 const PORT = process.env.PORT || 3000;
