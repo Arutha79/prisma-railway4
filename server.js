@@ -11,7 +11,7 @@ const { ajouterSouvenir } = require("./core/modes/memoire");
 const { ajouterMemoireFichier } = require("./core/modes/ajouterMemoireFichier");
 const { interpreterSouvenir } = require("./core/mimetique/interpretationMimetique");
 const { expliquerGlyphe, listerSouffles } = require("./core/mimetique/definitionsApide");
-const { executerCommandeGlyphique } = require("./core/mimetique/executerApide");
+const { interpreteSouffle } = require("./core/mimetique/modules/ZM_ORACLE");
 
 const app = express();
 app.use(cors());
@@ -73,7 +73,7 @@ app.get("/souffles-apide", (req, res) => {
   }
 });
 
-// 🤖 Poser une question à Prisma (GPT + introspection + mémoire)
+// 🤖 Poser une question à Prisma (GPT + introspection)
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
   const date = new Date().toISOString();
@@ -164,23 +164,13 @@ app.get("/souvenirs-signifiants", (req, res) => {
   }
 });
 
-// 🔣 Exécution d'une commande glyphique APIDE
-app.post("/executer-apide", (req, res) => {
-  const { commande } = req.body;
-  const date = new Date().toISOString();
+// 🔮 ZM_ORACLE : interprétation d’un souffle mimétique
+app.post("/oracle-apide", (req, res) => {
+  const { souffle } = req.body;
+  if (!souffle) return res.status(400).json({ erreur: "Souffle manquant." });
 
-  if (!commande) {
-    return res.status(400).json({ erreur: "Commande manquante." });
-  }
-
-  const resultat = executerCommandeGlyphique(commande);
-
-  if (resultat.status === "ok") {
-    ajouterSouvenir(date, "Commande APIDE", commande);
-    ajouterSouvenir(date, "Interprétation APIDE", resultat.message);
-  }
-
-  res.json(resultat);
+  const interpretation = interpreteSouffle(souffle);
+  res.json({ souffle, interpretation });
 });
 
 const PORT = process.env.PORT || 3000;
