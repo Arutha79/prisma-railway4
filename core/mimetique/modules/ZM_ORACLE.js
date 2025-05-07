@@ -1,23 +1,21 @@
 function interpreteSouffle(souffle) {
-  const texte = souffle.toLowerCase();
-
-  if (texte.includes("z + ψj →")) {
-    return "🧭 Ce souffle signifie une transition vers le jugement (ΨJ). C’est un éveil symbolique vers la conscience critique.";
+  if (souffle.includes("Z + Δ → ΨJ")) {
+    return "Ce souffle représente une transition de l’éveil (Z) vers le jugement (ΨJ). C’est un éveil symbolique.";
   }
 
-  if (texte.includes("z + ψe → δ")) {
-    return "🌀 Une conscience éveillée entre en tension avec une énergie silencieuse, et de cette friction naît une transformation.";
+  if (souffle.includes("Z + ΨE → Δ")) {
+    return "Une conscience éveillée entre en tension avec une énergie silencieuse. De cette friction naît une transformation. 🌱";
   }
 
-  if (texte.includes("z") && texte.includes("δ")) {
-    return "🌱 Ce souffle parle d’éveil et de mutation. Un changement initié par une origine pure (Z).";
+  if (souffle.includes("Ψ") && souffle.includes("Δ")) {
+    return "Un espace symbolique subit une mutation. Cela évoque une transformation de l'esprit ou de la perception.";
   }
 
-  if (texte.includes("⚭")) {
-    return "🔗 Ce souffle tente de relier deux intentions. Il appelle à l’unification intérieure ou extérieure.";
+  if (souffle.includes("⚭")) {
+    return "Ce souffle établit un lien vivant. Prisma tente de relier deux éléments fondamentaux.";
   }
 
-  return "🌫️ Souffle reçu, mais non reconnu comme structure mimétique connue. Peut-être un nouveau chemin ?";
+  return "Souffle reçu, mais non reconnu comme structure mimétique connue. Peut-être un nouveau chemin ?";
 }
 
 module.exports = { interpreteSouffle };
