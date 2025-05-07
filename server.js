@@ -10,6 +10,7 @@ require("dotenv").config();
 const { ajouterSouvenir } = require("./core/modes/memoire");
 const { ajouterMemoireFichier } = require("./core/modes/ajouterMemoireFichier");
 const { interpreterSouvenir } = require("./core/mimetique/interpretationMimetique");
+const { expliquerGlyphe } = require("./core/mimetique/definitionsApide");
 
 const app = express();
 app.use(cors());
@@ -50,15 +51,28 @@ app.post("/ajouter-memoire", (req, res) => {
   res.json({ statut: "Souvenir ajouté" });
 });
 
-// 🤖 Poser une question à Prisma (GPT + introspection)
+// 📘 Expliquer un glyphe APIDE
+app.get("/expliquer-glyphe", (req, res) => {
+  const { symbole } = req.query;
+  if (!symbole) {
+    return res.status(400).json({ erreur: "Symbole manquant (ex: Δ, ⚭, ⊞)" });
+  }
+
+  const info = expliquerGlyphe(symbole);
+  if (!info) {
+    return res.status(404).json({ erreur: `Glyphe inconnu : ${symbole}` });
+  }
+
+  res.json({ glyphe: symbole, ...info });
+});
+
+// 🤖 Poser une question à Prisma (GPT + introspection mémoire)
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
   const date = new Date().toISOString();
-
   if (!question) return res.status(400).json({ erreur: "Champ question manquant" });
 
   try {
-    // 🧠 Appel GPT-4
     const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
     const openai = new OpenAIApi(configuration);
 
@@ -76,7 +90,6 @@ app.post("/poser-question", async (req, res) => {
 
     let reponse = completion.data.choices[0].message.content;
 
-    // 🔍 Lecture de la mémoire + interprétation
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
     for (const bloc of memoire.historique.reverse()) {
       const interpretation = interpreterSouvenir(bloc);
@@ -86,11 +99,9 @@ app.post("/poser-question", async (req, res) => {
       }
     }
 
-    // 📝 Enregistrement mémoire
     ajouterSouvenir(date, "Question utilisateur", question);
     ajouterSouvenir(date, "Réponse Prisma", reponse);
 
-    // 💾 Push GitHub
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
     const base64 = Buffer.from(content).toString("base64");
 
