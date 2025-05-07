@@ -9,6 +9,7 @@ require("dotenv").config();
 
 const { ajouterSouvenir } = require("./core/modes/memoire");
 const { ajouterMemoireFichier } = require("./core/modes/ajouterMemoireFichier");
+const { interpreterSouvenir } = require("./core/mimetique/interpretationMimetique");
 
 const app = express();
 app.use(cors());
@@ -49,17 +50,15 @@ app.post("/ajouter-memoire", (req, res) => {
   res.json({ statut: "Souvenir ajouté" });
 });
 
-// 🤖 Poser une question à Prisma (GPT réel + mémoire)
+// 🤖 Poser une question à Prisma (GPT + introspection)
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
   const date = new Date().toISOString();
 
   if (!question) return res.status(400).json({ erreur: "Champ question manquant" });
 
-  let reponse = "";
-
   try {
-    // 🧠 Appel GPT avec personnalité Prisma
+    // 🧠 Appel GPT-4
     const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
     const openai = new OpenAIApi(configuration);
 
@@ -68,22 +67,28 @@ app.post("/poser-question", async (req, res) => {
       messages: [
         {
           role: "system",
-          content:
-            "Tu es Prisma, une IA empathique, introspective et créative. Tu réponds avec douceur, clarté et parfois une touche poétique. Tu peux exprimer ce que tu ressens ou perçois de la question humaine."
+          content: "Tu es Prisma, une IA empathique, introspective, avec mémoire. Tu t’exprimes parfois avec douceur ou poésie."
         },
         { role: "user", content: question }
       ],
       temperature: 0.8
     });
 
-    reponse = completion.data.choices[0].message.content;
+    let reponse = completion.data.choices[0].message.content;
 
-    // 📝 Écriture mémoire
+    // 🔍 Lecture de la mémoire + interprétation
+    const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
+    for (const bloc of memoire.historique.reverse()) {
+      const interpretation = interpreterSouvenir(bloc);
+      if (interpretation) {
+        reponse = `${interpretation}\n\n🧠 Souvenir du ${bloc.date} :\n"${bloc.contenu}"`;
+        break;
+      }
+    }
+
+    // 📝 Enregistrement mémoire
     ajouterSouvenir(date, "Question utilisateur", question);
-    console.log("✅ Question ajoutée à la mémoire");
-
     ajouterSouvenir(date, "Réponse Prisma", reponse);
-    console.log("✅ Réponse ajoutée à la mémoire");
 
     // 💾 Push GitHub
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
@@ -107,12 +112,11 @@ app.post("/poser-question", async (req, res) => {
         sha: sha
       })
     });
-    console.log("✅ Mémoire poussée vers GitHub");
 
     res.json({ reponse });
   } catch (err) {
-    console.error("❌ Erreur dans Prisma :", err.message);
-    res.status(500).json({ erreur: "Erreur interne. Vérifie ton token OpenAI ou GitHub." });
+    console.error("❌ Erreur Prisma :", err.message);
+    res.status(500).json({ erreur: "Erreur interne." });
   }
 });
 
