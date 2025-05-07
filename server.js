@@ -10,7 +10,7 @@ require("dotenv").config();
 const { ajouterSouvenir } = require("./core/modes/memoire");
 const { ajouterMemoireFichier } = require("./core/modes/ajouterMemoireFichier");
 const { interpreterSouvenir } = require("./core/mimetique/interpretationMimetique");
-const { expliquerGlyphe } = require("./core/mimetique/definitionsApide");
+const { expliquerGlyphe, listerSouffles } = require("./core/mimetique/definitionsApide");
 
 const app = express();
 app.use(cors());
@@ -54,22 +54,29 @@ app.post("/ajouter-memoire", (req, res) => {
 // 📘 Expliquer un glyphe APIDE
 app.get("/expliquer-glyphe", (req, res) => {
   const { symbole } = req.query;
-  if (!symbole) {
-    return res.status(400).json({ erreur: "Symbole manquant (ex: Δ, ⚭, ⊞)" });
-  }
+  if (!symbole) return res.status(400).json({ erreur: "Symbole manquant (ex: Δ, ⚭, ⊞)" });
 
   const info = expliquerGlyphe(symbole);
-  if (!info) {
-    return res.status(404).json({ erreur: `Glyphe inconnu : ${symbole}` });
-  }
+  if (!info) return res.status(404).json({ erreur: `Glyphe inconnu : ${symbole}` });
 
   res.json({ glyphe: symbole, ...info });
 });
 
-// 🤖 Poser une question à Prisma (GPT + introspection mémoire)
+// 🌬️ Liste des souffles APIDE
+app.get("/souffles-apide", (req, res) => {
+  try {
+    const souffles = listerSouffles();
+    res.json({ souffles });
+  } catch (err) {
+    res.status(500).json({ erreur: "Impossible de récupérer les souffles." });
+  }
+});
+
+// 🤖 Poser une question à Prisma (GPT + introspection)
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
   const date = new Date().toISOString();
+
   if (!question) return res.status(400).json({ erreur: "Champ question manquant" });
 
   try {
