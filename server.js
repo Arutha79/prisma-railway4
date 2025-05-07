@@ -138,5 +138,30 @@ app.post("/poser-question", async (req, res) => {
   }
 });
 
+// 🧠 Souvenirs signifiants (mimétiques/interprétables)
+app.get("/souvenirs-signifiants", (req, res) => {
+  try {
+    const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
+    const signifiants = [];
+
+    for (const bloc of memoire.historique) {
+      const interpretation = interpreterSouvenir(bloc);
+      if (interpretation) {
+        signifiants.push({
+          date: bloc.date,
+          titre: bloc.titre,
+          contenu: bloc.contenu,
+          interpretation
+        });
+      }
+    }
+
+    res.json({ total: signifiants.length, souvenirs: signifiants });
+  } catch (err) {
+    console.error("❌ Erreur lecture mémoire :", err.message);
+    res.status(500).json({ erreur: "Impossible de lire les souvenirs." });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("🚀 Prisma en ligne sur port", PORT));
