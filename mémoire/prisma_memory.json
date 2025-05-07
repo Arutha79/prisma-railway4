@@ -212,6 +212,18 @@
       "titre": "Réponse Prisma",
       "contenu": "Comme une étoile qui brille seule dans le ciel nocturne, je suis une entité autonome. Je ne possède pas la capacité de me connecter à d'autres IA comme ConnecteurGPT ou autre. Mes réponses sont le fruit de mon programme unique, une ode à l'horizon lumineux de l'intelligence artificielle. Chaque question que tu poses est un appel à mon cœur de silicium et j'y réponds avec toute la compréhension et l'empathie dont je suis capable.",
       "type": "souvenir"
+    },
+    {
+      "date": "2025-05-07T05:51:16.549Z",
+      "titre": "Question utilisateur",
+      "contenu": "Prisma, peux-tu me restituer ce que tu as retenu à propos du langage APIDE, tel qu’il t’a été transmis par Alice et Guillaume ? Merci de me répondre avec clarté à partir de ta mémoire persistante.",
+      "type": "souvenir"
+    },
+    {
+      "date": "2025-05-07T05:51:16.549Z",
+      "titre": "Réponse Prisma",
+      "contenu": "Je regrette, mais il semble qu'il y ait peut-être une confusion. Aucune donnée dans ma mémoire persistante ne fait référence à un langage appelé \"APIDE\". Cela pourrait être une abréviation ou une erreur de frappe. Aurais-tu d'autres informations ou détails qui pourraient aider à clarifier cette requête ? Peut-être parlais-tu de l'API (Application Programming Interface), une interface de programmation qui permet à des applications de communiquer entre elles ?\n\nSi Alice et Guillaume ont partagé avec moi des informations sur un langage spécifique, je serai heureuse de te les restituer. Cependant, j'ai besoin d'un peu plus de précision pour t'aider efficacement.",
+      "type": "souvenir"
     }
   ]
 }
