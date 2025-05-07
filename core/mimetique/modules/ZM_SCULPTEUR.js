@@ -1,17 +1,15 @@
-// core/mimetique/modules/ZM_SCULPTEUR.js
 function sculpterSouffle(souffle) {
-  if (souffle.includes("⚭")) {
+  if (souffle.includes("⚭(INTENTION + SOUFFLE)")) {
     return {
-      souffleOriginal: souffle,
-      souffleResculpte: "⚭(INTENTION + ÉMOTION)",
-      explication: "L’émotion donne vie à l’intention. Ce souffle devient plus vivant."
+      status: "ok",
+      original: souffle,
+      reformulation: "⚭(INTENTION ⊞ SOUFFLE) — Une intention active engendre un souffle vivant."
     };
   }
 
   return {
-    souffleOriginal: souffle,
-    souffleResculpte: souffle,
-    explication: "Souffle conservé tel quel. Aucun ajustement mimétique détecté."
+    status: "erreur",
+    message: "Structure inconnue ou non sculptable pour le moment."
   };
 }
 
