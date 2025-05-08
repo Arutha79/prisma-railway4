@@ -14,6 +14,7 @@ const { expliquerGlyphe, listerSouffles } = require("./core/mimetique/definition
 const { interpreteSouffle } = require("./core/mimetique/modules/ZM_ORACLE");
 const { sculpterSouffle } = require("./core/mimetique/modules/ZM_SCULPTEUR");
 const { resonnerSouvenir } = require("./core/mimetique/modules/ZM_RÉSONANT");
+const { autoEvaluerMemoire } = require("./core/diagnostic/auto_evaluation"); // ✅ nouveau
 
 const app = express();
 app.use(cors());
@@ -159,33 +160,40 @@ app.get("/souvenirs-signifiants", (req, res) => {
   }
 });
 
-// 🔮 Oracle mimétique : interprétation d’un souffle
+// 🔮 Oracle mimétique
 app.post("/oracle-apide", (req, res) => {
   const { souffle } = req.body;
   if (!souffle) return res.status(400).json({ erreur: "Souffle manquant." });
-
   const interpretation = interpreteSouffle(souffle);
   res.json({ souffle, interpretation });
 });
 
-// 🔧 Sculpteur mimétique : reformule un souffle
+// 🛠️ Sculpteur mimétique
 app.post("/sculpteur-apide", (req, res) => {
   const { souffle } = req.body;
   if (!souffle) return res.status(400).json({ erreur: "Souffle manquant." });
-
   const result = sculpterSouffle(souffle);
   res.json(result);
 });
 
-// 🎵 Résonant : crée un écho mimétique d’un souvenir
+// 🔁 Résonant
 app.post("/resonant-apide", (req, res) => {
   const { souvenir } = req.body;
   if (!souvenir || !souvenir.contenu) {
     return res.status(400).json({ erreur: "Souvenir manquant ou invalide." });
   }
-
   const echo = resonnerSouvenir(souvenir);
   res.json({ echo });
+});
+
+// 🧠 Diagnostic mémoire
+app.get("/auto-diagnostic", (req, res) => {
+  try {
+    const resultat = autoEvaluerMemoire();
+    res.json(resultat);
+  } catch (e) {
+    res.status(500).json({ erreur: "Auto-évaluation impossible.", details: e.message });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
