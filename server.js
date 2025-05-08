@@ -14,11 +14,11 @@ const { expliquerGlyphe, listerSouffles } = require("./core/mimetique/definition
 const { interpreteSouffle } = require("./core/mimetique/modules/ZM_ORACLE");
 const { sculpterSouffle } = require("./core/mimetique/modules/ZM_SCULPTEUR");
 const { resonnerSouvenir } = require("./core/mimetique/modules/ZM_RÉSONANT");
+const { syntheseMemoire } = require("./core/mimetique/modules/ZM_ARCHIVISTE");
+const { extraireMutationSymbolique } = require("./core/mimetique/modules/ZM_SYNTHETISEUR");
 const { autoEvaluerMemoire } = require("./core/diagnostic/auto_evaluation");
 const { getPersonnalite } = require("./core/mimetique/presetsPersonnalite");
 const { rechercherSouvenirsSimilaires } = require("./core/vectoriel/searchMemoire");
-const { syntheseMemoire } = require("./core/mimetique/modules/ZM_ARCHIVISTE");
-const { extraireMutationSymbolique } = require("./core/mimetique/modules/ZM_SYNTHETISEUR");
 
 const app = express();
 app.use(cors());
@@ -34,16 +34,12 @@ if (!fs.existsSync(MEMOIRE_PATH)) {
   fs.writeFileSync(MEMOIRE_PATH, JSON.stringify({ historique: [] }, null, 2), "utf-8");
 }
 
-// Routes
+// ✅ ROUTES
 
 app.get("/ping-memoire", (req, res) => {
   try {
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
-    res.json({
-      status: "ok",
-      total: memoire.historique.length,
-      dernier: memoire.historique.slice(-1)[0]
-    });
+    res.json({ status: "ok", total: memoire.historique.length, dernier: memoire.historique.slice(-1)[0] });
   } catch (e) {
     res.status(500).json({ erreur: "Mémoire inaccessible", details: e.message });
   }
@@ -70,7 +66,7 @@ app.get("/expliquer-glyphe", (req, res) => {
 app.get("/souffles-apide", (req, res) => {
   try {
     res.json({ souffles: listerSouffles() });
-  } catch (err) {
+  } catch {
     res.status(500).json({ erreur: "Impossible de récupérer les souffles." });
   }
 });
@@ -145,18 +141,15 @@ app.get("/souvenirs-signifiants", (req, res) => {
     const signifiants = memoire.historique
       .map((bloc) => {
         const interpretation = interpreterSouvenir(bloc);
-        if (interpretation) {
-          return { ...bloc, interpretation };
-        }
+        if (interpretation) return { ...bloc, interpretation };
       })
       .filter(Boolean);
     res.json({ total: signifiants.length, souvenirs: signifiants });
-  } catch (err) {
+  } catch {
     res.status(500).json({ erreur: "Lecture mémoire échouée." });
   }
 });
 
-// Modules mimétiques
 app.post("/oracle-apide", (req, res) => {
   const { souffle } = req.body;
   if (!souffle) return res.status(400).json({ erreur: "Souffle manquant." });
@@ -177,33 +170,28 @@ app.post("/resonant-apide", (req, res) => {
   res.json({ echo: resonnerSouvenir(souvenir) });
 });
 
-// Synthèse archiviste
 app.get("/synthese-archiviste", (req, res) => {
   try {
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
-    const synthese = syntheseMemoire(memoire);
-    res.json({ synthese });
-  } catch (e) {
+    res.json({ synthese: syntheseMemoire(memoire) });
+  } catch {
     res.status(500).json({ erreur: "Synthèse impossible." });
   }
 });
 
-// Synthèse symbolique
 app.get("/synthese-symbolique", (req, res) => {
   try {
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
-    const synthese = extraireMutationSymbolique(memoire);
-    res.json({ synthese });
-  } catch (e) {
+    res.json({ synthese: extraireMutationSymbolique(memoire) });
+  } catch {
     res.status(500).json({ erreur: "Extraction symbolique impossible." });
   }
 });
 
-// Diagnostic
 app.get("/auto-diagnostic", (req, res) => {
   try {
     res.json(autoEvaluerMemoire());
-  } catch (e) {
+  } catch {
     res.status(500).json({ erreur: "Auto-évaluation impossible." });
   }
 });
@@ -212,7 +200,7 @@ app.get("/etat-prisma", (req, res) => {
   try {
     const etat = JSON.parse(fs.readFileSync(ETAT_PATH, "utf-8"));
     res.json(etat);
-  } catch (e) {
+  } catch {
     res.status(500).json({ erreur: "État introuvable." });
   }
 });
@@ -222,7 +210,7 @@ app.post("/search-memoire", (req, res) => {
   if (!query) return res.status(400).json({ erreur: "Query manquante." });
   try {
     res.json({ query, resultats: rechercherSouvenirsSimilaires(query) });
-  } catch (e) {
+  } catch {
     res.status(500).json({ erreur: "Recherche échouée." });
   }
 });
@@ -234,7 +222,7 @@ app.post("/changer-mode", (req, res) => {
     etat.mode = mode;
     fs.writeFileSync(ETAT_PATH, JSON.stringify(etat, null, 2), "utf-8");
     res.json({ statut: "Mode mis à jour", nouveau_mode: mode });
-  } catch (e) {
+  } catch {
     res.status(500).json({ erreur: "Impossible de modifier le mode." });
   }
 });
