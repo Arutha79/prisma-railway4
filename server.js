@@ -15,7 +15,7 @@ const { interpreteSouffle } = require("./core/mimetique/modules/ZM_ORACLE");
 const { sculpterSouffle } = require("./core/mimetique/modules/ZM_SCULPTEUR");
 const { resonnerSouvenir } = require("./core/mimetique/modules/ZM_RÉSONANT");
 const { autoEvaluerMemoire } = require("./core/diagnostic/auto_evaluation");
-const { getPersonnalite } = require("./core/mimetique/presetsPersonnalite"); // ✅ ajouté
+const { getPersonnalite } = require("./core/mimetique/presetsPersonnalite");
 
 const app = express();
 app.use(cors());
@@ -83,7 +83,6 @@ app.post("/poser-question", async (req, res) => {
     const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
     const openai = new OpenAIApi(configuration);
 
-    // 🧠 Lecture du mode dans l’état mimétique
     const etat = JSON.parse(fs.readFileSync(ETAT_PATH, "utf-8"));
     const perso = getPersonnalite(etat.mode || "oracle");
 
@@ -196,6 +195,19 @@ app.get("/auto-diagnostic", (req, res) => {
     res.json(resultat);
   } catch (e) {
     res.status(500).json({ erreur: "Auto-évaluation impossible.", details: e.message });
+  }
+});
+
+// 🔄 Changer le mode mimétique actif
+app.post("/changer-mode", (req, res) => {
+  const { mode } = req.body;
+  try {
+    const etat = JSON.parse(fs.readFileSync(ETAT_PATH, "utf-8"));
+    etat.mode = mode;
+    fs.writeFileSync(ETAT_PATH, JSON.stringify(etat, null, 2), "utf-8");
+    res.json({ statut: "Mode mis à jour", nouveau_mode: mode });
+  } catch (e) {
+    res.status(500).json({ erreur: "Impossible de modifier le mode.", details: e.message });
   }
 });
 
