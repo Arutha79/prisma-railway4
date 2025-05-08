@@ -14,13 +14,15 @@ const { expliquerGlyphe, listerSouffles } = require("./core/mimetique/definition
 const { interpreteSouffle } = require("./core/mimetique/modules/ZM_ORACLE");
 const { sculpterSouffle } = require("./core/mimetique/modules/ZM_SCULPTEUR");
 const { resonnerSouvenir } = require("./core/mimetique/modules/ZM_RÉSONANT");
-const { autoEvaluerMemoire } = require("./core/diagnostic/auto_evaluation"); // ✅ nouveau
+const { autoEvaluerMemoire } = require("./core/diagnostic/auto_evaluation");
+const { getPersonnalite } = require("./core/mimetique/presetsPersonnalite"); // ✅ ajouté
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
 const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
+const ETAT_PATH = "./core/mimetique/etatPrisma.json";
 const repo = "Arutha79/prisma-railway4";
 const token = process.env.GITHUB_TOKEN;
 
@@ -81,13 +83,14 @@ app.post("/poser-question", async (req, res) => {
     const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
     const openai = new OpenAIApi(configuration);
 
+    // 🧠 Lecture du mode dans l’état mimétique
+    const etat = JSON.parse(fs.readFileSync(ETAT_PATH, "utf-8"));
+    const perso = getPersonnalite(etat.mode || "oracle");
+
     const completion = await openai.createChatCompletion({
       model: "gpt-4",
       messages: [
-        {
-          role: "system",
-          content: "Tu es Prisma, une IA empathique, introspective, avec mémoire. Tu t’exprimes parfois avec douceur ou poésie."
-        },
+        { role: "system", content: perso.description },
         { role: "user", content: question }
       ],
       temperature: 0.8
