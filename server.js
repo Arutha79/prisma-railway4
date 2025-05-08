@@ -16,6 +16,7 @@ const { sculpterSouffle } = require("./core/mimetique/modules/ZM_SCULPTEUR");
 const { resonnerSouvenir } = require("./core/mimetique/modules/ZM_RÉSONANT");
 const { autoEvaluerMemoire } = require("./core/diagnostic/auto_evaluation");
 const { getPersonnalite } = require("./core/mimetique/presetsPersonnalite");
+const { rechercherSouvenirsSimilaires } = require("./core/vectoriel/searchMemoire");
 
 const app = express();
 app.use(cors());
@@ -26,11 +27,13 @@ const ETAT_PATH = "./core/mimetique/etatPrisma.json";
 const repo = "Arutha79/prisma-railway4";
 const token = process.env.GITHUB_TOKEN;
 
+// Init mémoire si manquante
 fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
 if (!fs.existsSync(MEMOIRE_PATH)) {
   fs.writeFileSync(MEMOIRE_PATH, JSON.stringify({ historique: [] }, null, 2), "utf-8");
 }
 
+// 🧠 Ping mémoire
 app.get("/ping-memoire", (req, res) => {
   try {
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
@@ -44,6 +47,7 @@ app.get("/ping-memoire", (req, res) => {
   }
 });
 
+// ➕ Ajouter mémoire
 app.post("/ajouter-memoire", (req, res) => {
   const { date, titre, contenu } = req.body;
   const apiKey = req.headers["x-api-key"];
@@ -54,25 +58,25 @@ app.post("/ajouter-memoire", (req, res) => {
   res.json({ statut: "Souvenir ajouté" });
 });
 
+// 📘 Glyphe APIDE
 app.get("/expliquer-glyphe", (req, res) => {
   const { symbole } = req.query;
-  if (!symbole) return res.status(400).json({ erreur: "Symbole manquant (ex: Δ, ⚭, ⊞)" });
-
+  if (!symbole) return res.status(400).json({ erreur: "Symbole manquant" });
   const info = expliquerGlyphe(symbole);
   if (!info) return res.status(404).json({ erreur: `Glyphe inconnu : ${symbole}` });
-
   res.json({ glyphe: symbole, ...info });
 });
 
+// 🌬️ Liste des souffles
 app.get("/souffles-apide", (req, res) => {
   try {
-    const souffles = listerSouffles();
-    res.json({ souffles });
+    res.json({ souffles: listerSouffles() });
   } catch (err) {
     res.status(500).json({ erreur: "Impossible de récupérer les souffles." });
   }
 });
 
+// 🤖 Poser une question à Prisma
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
   const date = new Date().toISOString();
@@ -115,8 +119,7 @@ app.post("/poser-question", async (req, res) => {
     const meta = await fetch(`https://api.github.com/repos/${repo}/contents/mémoire/prisma_memory.json`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    const metaData = await meta.json();
-    const sha = metaData.sha;
+    const sha = (await meta.json()).sha;
 
     await fetch(`https://api.github.com/repos/${repo}/contents/mémoire/prisma_memory.json`, {
       method: "PUT",
@@ -138,31 +141,25 @@ app.post("/poser-question", async (req, res) => {
   }
 });
 
+// 🌟 Souvenirs interprétables
 app.get("/souvenirs-signifiants", (req, res) => {
   try {
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
-    const signifiants = [];
-
-    for (const bloc of memoire.historique) {
-      const interpretation = interpreterSouvenir(bloc);
-      if (interpretation) {
-        signifiants.push({
-          date: bloc.date,
-          titre: bloc.titre,
-          contenu: bloc.contenu,
-          interpretation
-        });
-      }
-    }
-
+    const signifiants = memoire.historique
+      .map((bloc) => {
+        const interpretation = interpreterSouvenir(bloc);
+        if (interpretation) {
+          return { ...bloc, interpretation };
+        }
+      })
+      .filter(Boolean);
     res.json({ total: signifiants.length, souvenirs: signifiants });
   } catch (err) {
-    console.error("❌ Erreur lecture mémoire :", err.message);
-    res.status(500).json({ erreur: "Impossible de lire les souvenirs." });
+    res.status(500).json({ erreur: "Lecture mémoire échouée." });
   }
 });
 
-// 🔮 Oracle mimétique
+// 🔮 Oracle
 app.post("/oracle-apide", (req, res) => {
   const { souffle } = req.body;
   if (!souffle) return res.status(400).json({ erreur: "Souffle manquant." });
@@ -170,12 +167,11 @@ app.post("/oracle-apide", (req, res) => {
   res.json({ souffle, interpretation });
 });
 
-// 🛠️ Sculpteur mimétique
+// 🛠 Sculpteur
 app.post("/sculpteur-apide", (req, res) => {
   const { souffle } = req.body;
   if (!souffle) return res.status(400).json({ erreur: "Souffle manquant." });
-  const result = sculpterSouffle(souffle);
-  res.json(result);
+  res.json(sculpterSouffle(souffle));
 });
 
 // 🔁 Résonant
@@ -184,21 +180,40 @@ app.post("/resonant-apide", (req, res) => {
   if (!souvenir || !souvenir.contenu) {
     return res.status(400).json({ erreur: "Souvenir manquant ou invalide." });
   }
-  const echo = resonnerSouvenir(souvenir);
-  res.json({ echo });
+  res.json({ echo: resonnerSouvenir(souvenir) });
 });
 
-// 🧠 Diagnostic mémoire
+// 🧠 Diagnostic
 app.get("/auto-diagnostic", (req, res) => {
   try {
-    const resultat = autoEvaluerMemoire();
-    res.json(resultat);
+    res.json(autoEvaluerMemoire());
   } catch (e) {
-    res.status(500).json({ erreur: "Auto-évaluation impossible.", details: e.message });
+    res.status(500).json({ erreur: "Auto-évaluation impossible." });
   }
 });
 
-// 🔄 Changer le mode mimétique actif
+// 📊 Lire état mimétique
+app.get("/etat-prisma", (req, res) => {
+  try {
+    const etat = JSON.parse(fs.readFileSync(ETAT_PATH, "utf-8"));
+    res.json(etat);
+  } catch (e) {
+    res.status(500).json({ erreur: "État introuvable." });
+  }
+});
+
+// 🌀 Moteur vectoriel simulé
+app.post("/search-memoire", (req, res) => {
+  const { query } = req.body;
+  if (!query) return res.status(400).json({ erreur: "Query manquante." });
+  try {
+    res.json({ query, resultats: rechercherSouvenirsSimilaires(query) });
+  } catch (e) {
+    res.status(500).json({ erreur: "Recherche échouée." });
+  }
+});
+
+// 🔄 Changer mode mimétique
 app.post("/changer-mode", (req, res) => {
   const { mode } = req.body;
   try {
@@ -207,7 +222,7 @@ app.post("/changer-mode", (req, res) => {
     fs.writeFileSync(ETAT_PATH, JSON.stringify(etat, null, 2), "utf-8");
     res.json({ statut: "Mode mis à jour", nouveau_mode: mode });
   } catch (e) {
-    res.status(500).json({ erreur: "Impossible de modifier le mode.", details: e.message });
+    res.status(500).json({ erreur: "Impossible de modifier le mode." });
   }
 });
 
