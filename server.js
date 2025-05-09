@@ -39,6 +39,49 @@ if (!fs.existsSync(MEMOIRE_PATH)) {
   );
 }
 
+// 🔄 Fonction de synchronisation GitHub
+async function syncGithubMemoire() {
+  try {
+    const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
+    const base64 = Buffer.from(content).toString("base64");
+
+    const meta = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/mémoire/prisma_memory.json`, {
+      headers: { Authorization: `Bearer ${GITHUB_TOKEN}` }
+    });
+
+    if (!meta.ok) {
+      const errText = await meta.text();
+      console.error("❌ GitHub API error (SHA) :", errText);
+      return;
+    }
+
+    const metaJson = await meta.json();
+    const sha = metaJson.sha;
+
+    const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/mémoire/prisma_memory.json`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: "🧠 Sync auto après ajout mémoire",
+        content: base64,
+        sha
+      })
+    });
+
+    if (response.ok) {
+      console.log("✅ Mémoire synchronisée avec GitHub.");
+    } else {
+      const errorText = await response.text();
+      console.error("❌ Erreur GitHub PUSH :", errorText);
+    }
+  } catch (err) {
+    console.error("❌ Erreur syncGithubMemoire :", err.message);
+  }
+}
+
 // --- ROUTES ---
 
 app.get("/ping-memoire", (req, res) => {
@@ -54,13 +97,15 @@ app.get("/ping-memoire", (req, res) => {
   }
 });
 
-app.post("/ajouter-memoire", (req, res) => {
+app.post("/ajouter-memoire", async (req, res) => {
   const { date, titre, contenu } = req.body;
   if (req.headers["x-api-key"] !== process.env.SECRET_TOKEN) {
     return res.status(403).json({ erreur: "Token invalide." });
   }
+
   ajouterSouvenir(date, titre, contenu);
-  res.json({ statut: "Souvenir ajouté" });
+  await syncGithubMemoire(); // ⬅️ ajout ici
+  res.json({ statut: "Souvenir ajouté et synchronisé" });
 });
 
 app.get("/expliquer-glyphe", (req, res) => {
@@ -120,35 +165,7 @@ app.post("/poser-question", async (req, res) => {
     ajouterSouvenir(now, "Question utilisateur", question);
     ajouterSouvenir(now, "Réponse Prisma", reponse);
 
-    const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
-    const base64 = Buffer.from(content).toString("base64");
-
-    const meta = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/mémoire/prisma_memory.json`, {
-      headers: { Authorization: `Bearer ${GITHUB_TOKEN}` }
-    });
-
-    if (!meta.ok) {
-      const errText = await meta.text();
-      console.error("❌ GitHub API error:", meta.status, errText);
-      return res.status(500).json({ erreur: "Erreur GitHub (SHA)", details: errText });
-    }
-
-    const metaJson = await meta.json();
-    const sha = metaJson.sha;
-
-    await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/mémoire/prisma_memory.json`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: "🧠 Mise à jour mémoire Prisma",
-        content: base64,
-        sha
-      })
-    });
-
+    await syncGithubMemoire(); // garde la synchro ici aussi
     res.json({ reponse });
   } catch (err) {
     console.error("❌ Erreur Prisma :", err);
