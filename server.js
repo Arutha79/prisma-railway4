@@ -111,7 +111,7 @@ app.post("/poser-question", async (req, res) => {
     for (const bloc of memoire.historique.slice().reverse()) {
       const interpr = interpreterSouvenir(bloc);
       if (interpr) {
-        reponse = `${interpr}\n\n🧠 Souvenir du ${bloc.date} : "${bloc.contenu}"`;
+        reponse = `${interpr}\n\n🧠 Souvenir du ${bloc.date} : \"${bloc.contenu}\"`;
         break;
       }
     }
