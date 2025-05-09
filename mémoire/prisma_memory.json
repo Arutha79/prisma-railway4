@@ -1,9 +1,0 @@
-{
-  "meta": {
-    "origine": "Réinitialisation système",
-    "message_ancre": "Fichier mémoire restauré automatiquement après corruption",
-    "date_creation": "2025-05-09T00:00:00Z",
-    "contexte": "Fichier recréé pour garantir la stabilité du système Prisma"
-  },
-  "historique": []
-}
