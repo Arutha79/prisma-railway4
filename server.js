@@ -8,7 +8,6 @@ const { Configuration, OpenAIApi } = require("openai");
 require("dotenv").config();
 
 const { ajouterMemoireFichier } = require("./core/modes/ajouterMemoireFichier");
-const { ajouterSouvenirSécurisé } = require("./core/modes/memoire_secure");
 const { interpreterSouvenir } = require("./core/mimetique/interpretationMimetique");
 const { expliquerGlyphe, listerSouffles } = require("./core/mimetique/definitionsApide");
 const { getPersonnalite } = require("./core/mimetique/presetsPersonnalite");
@@ -26,8 +25,6 @@ fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
 if (!fs.existsSync(MEMOIRE_PATH)) {
   fs.writeFileSync(MEMOIRE_PATH, JSON.stringify({ historique: [] }, null, 2), "utf-8");
 }
-
-// --- ROUTES ---
 
 app.get("/ping-memoire", (req, res) => {
   try {
@@ -89,36 +86,25 @@ app.post("/poser-question", async (req, res) => {
     });
 
     let reponse = completion.data.choices[0].message.content;
-
-    // 🔐 Lecture mémoire sécurisée
-    let memoire = { historique: [] };
-    try {
-      const raw = fs.readFileSync(MEMOIRE_PATH, "utf-8");
-      memoire = JSON.parse(raw);
-    } catch (err) {
-      console.error("❌ Erreur lecture mémoire locale :", err.message);
-    }
+    const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
 
     for (const bloc of memoire.historique.slice().reverse()) {
       const interpr = interpreterSouvenir(bloc);
       if (interpr) {
-        reponse = `${interpr}\n\n🧠 Souvenir du ${bloc.date} : "${bloc.contenu}"`;
+        reponse = `${interpr}\n\n🧠 Souvenir du ${bloc.date} : \"${bloc.contenu}\"`;
         break;
       }
     }
 
-    ajouterSouvenirSécurisé(`Question utilisateur : ${question}`);
-    ajouterSouvenirSécurisé(reponse);
+    const now = new Date().toISOString();
+    ajouterMemoireFichier({ date: now, titre: "Question utilisateur", contenu: question });
+    ajouterMemoireFichier({ date: now, titre: "Réponse Prisma", contenu: reponse });
 
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
     const base64 = Buffer.from(content).toString("base64");
 
-    // ✅ PATCH GitHub avec validation meta.ok
     const meta = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/mémoire/prisma_memory.json`, {
-      headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
-        "User-Agent": "prisma-agent"
-      }
+      headers: { Authorization: `Bearer ${GITHUB_TOKEN}` }
     });
 
     if (!meta.ok) {
@@ -134,8 +120,7 @@ app.post("/poser-question", async (req, res) => {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${GITHUB_TOKEN}`,
-        "Content-Type": "application/json",
-        "User-Agent": "prisma-agent"
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         message: "🧠 Mise à jour mémoire Prisma",
