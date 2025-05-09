@@ -1,63 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-
-interface Souvenir {
-  date: string;
-  type: string;
-  titre: string;
-  contenu: string;
-}
-
-interface Memoire {
-  meta?: any;
-  historique: Souvenir[];
-}
-
-function nettoyerRéponseAvantMémoire(contenu: string): string {
-  return contenu.replace(/🧠 Souvenir du .*?: ".*?"/gs, '').trim();
-}
-
-function estSouvenirDéjàPrésent(contenu: string, historique: Souvenir[]): boolean {
-  return historique.some(s => s.contenu === contenu);
-}
-
-@Injectable()
-export class MemoryService {
-  private readonly filePath = path.resolve(__dirname, '../../mémoire/prisma_memory.json');
-
-  private async loadMemory(): Promise<Memoire> {
-    try {
-      const data = await fs.readFile(this.filePath, 'utf-8');
-      return JSON.parse(data);
-    } catch (err) {
-      console.warn('⚠️ Memoire introuvable ou illisible. Nouveau fichier initialisé.');
-      return { historique: [] };
-    }
-  }
-
-  private async saveMemory(memoire: Memoire): Promise<void> {
-    const json = JSON.stringify(memoire, null, 2);
-    await fs.writeFile(this.filePath, json, 'utf-8');
-  }
-
-  async ajouterSouvenir(reponseBrute: string): Promise<void> {
-    const contenuNettoye = nettoyerRéponseAvantMémoire(reponseBrute);
-
-    if (!contenuNettoye || contenuNettoye.length < 10) return;
-
-    const memoire = await this.loadMemory();
-
-    if (estSouvenirDéjàPrésent(contenuNettoye, memoire.historique)) return;
-
-    const nouveauSouvenir: Souvenir = {
-      date: new Date().toISOString(),
-      type: 'souvenir',
-      titre: 'Réponse Prisma',
-      contenu: contenuNettoye,
-    };
-
-    memoire.historique.push(nouveauSouvenir);
-    await this.saveMemory(memoire);
-  }
-}
+echo '{
+  "meta": {
+    "origine": "Réinitialisation système",
+    "message_ancre": "Fichier mémoire restauré automatiquement après corruption",
+    "date_creation": "2025-05-09T00:00:00Z",
+    "contexte": "Fichier recréé pour garantir la stabilité du système Prisma"
+  },
+  "historique": []
+}' > mémoire/prisma_memory.json
