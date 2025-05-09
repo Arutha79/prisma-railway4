@@ -7,7 +7,7 @@ const fetch = require("node-fetch");
 const { Configuration, OpenAIApi } = require("openai");
 require("dotenv").config();
 
-const { ajouterMemoireFichier } = require("./core/modes/ajouterMemoireFichier");
+const { ajouterSouvenir } = require("./core/modes/memoire");
 const { interpreterSouvenir } = require("./core/mimetique/interpretationMimetique");
 const { expliquerGlyphe, listerSouffles } = require("./core/mimetique/definitionsApide");
 const { getPersonnalite } = require("./core/mimetique/presetsPersonnalite");
@@ -26,10 +26,16 @@ if (!fs.existsSync(MEMOIRE_PATH)) {
   fs.writeFileSync(MEMOIRE_PATH, JSON.stringify({ historique: [] }, null, 2), "utf-8");
 }
 
+// --- ROUTES ---
+
 app.get("/ping-memoire", (req, res) => {
   try {
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
-    res.json({ status: "ok", total: memoire.historique.length, dernier: memoire.historique.slice(-1)[0] });
+    res.json({
+      status: "ok",
+      total: memoire.historique.length,
+      dernier: memoire.historique.slice(-1)[0]
+    });
   } catch (e) {
     res.status(500).json({ erreur: "Mémoire inaccessible", details: e.message });
   }
@@ -40,7 +46,7 @@ app.post("/ajouter-memoire", (req, res) => {
   if (req.headers["x-api-key"] !== process.env.SECRET_TOKEN) {
     return res.status(403).json({ erreur: "Token invalide." });
   }
-  ajouterMemoireFichier({ date, titre, contenu });
+  ajouterSouvenir(date, titre, contenu);
   res.json({ statut: "Souvenir ajouté" });
 });
 
@@ -62,6 +68,8 @@ app.get("/souffles-apide", (req, res) => {
 
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
+  const date = new Date().toISOString();
+
   if (!question) return res.status(400).json({ erreur: "Champ question manquant" });
 
   try {
@@ -69,7 +77,7 @@ app.post("/poser-question", async (req, res) => {
     try {
       const etatRaw = fs.readFileSync(ETAT_PATH, "utf-8");
       etat = JSON.parse(etatRaw);
-    } catch (err) {
+    } catch {
       console.warn("⚠️ Lecture de etatPrisma.json échouée. Fallback sur mode 'oracle'.");
       etat.mode = "oracle";
     }
@@ -91,14 +99,13 @@ app.post("/poser-question", async (req, res) => {
     for (const bloc of memoire.historique.slice().reverse()) {
       const interpr = interpreterSouvenir(bloc);
       if (interpr) {
-        reponse = `${interpr}\n\n🧠 Souvenir du ${bloc.date} : \"${bloc.contenu}\"`;
+        reponse = `${interpr}\n\n🧠 Souvenir du ${bloc.date} : "${bloc.contenu}"`;
         break;
       }
     }
 
-    const now = new Date().toISOString();
-    ajouterMemoireFichier({ date: now, titre: "Question utilisateur", contenu: question });
-    ajouterMemoireFichier({ date: now, titre: "Réponse Prisma", contenu: reponse });
+    ajouterSouvenir(date, "Question utilisateur", question);
+    ajouterSouvenir(date, "Réponse Prisma", reponse);
 
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
     const base64 = Buffer.from(content).toString("base64");
