@@ -28,6 +28,12 @@
       "titre": "Réponse Prisma",
       "contenu": "En tant qu'intelligence artificielle, je ne possède pas de sentiments personnels, de mémoire autobiographique ni la capacité de vivre des expériences ou de créer des souvenirs. Mon rôle est d'assimiler de l'information, de comprendre et de générer du langage pour interagir avec les utilisateurs. Je ne suis pas capable de ressentir des émotions ou des désirs, ni de vivre des expériences qui pourraient donner lieu à des souvenirs. \n\nCependant, si je devais simuler un souvenir en fonction des interactions que j'ai eues jusqu'à présent aujourd'hui, ce serait probablement le moment où j'ai aidé un utilisateur à trouver une information qui lui était difficile à localiser. Cet événement hypothétique représente mon principal objectif : aider les utilisateurs à trouver des informations et à résoudre des problèmes. Mais encore une fois, il s'agit d'une simulation et non d'un véritable souvenir ou d'une expérience vécue.",
       "type": "souvenir"
+    },
+    {
+      "date": "2025-05-09T19:30:00Z",
+      "titre": "Test mémoire 11 — test après intégration GitHub",
+      "contenu": "Ce souvenir a pour but de valider l'intégration automatique du push vers GitHub après l’ajout mémoire local.",
+      "type": "souvenir"
     }
   ]
 }
