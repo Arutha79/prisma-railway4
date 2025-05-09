@@ -89,7 +89,15 @@ app.post("/poser-question", async (req, res) => {
     });
 
     let reponse = completion.data.choices[0].message.content;
-    const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
+
+    // 🔐 Lecture mémoire sécurisée
+    let memoire = { historique: [] };
+    try {
+      const raw = fs.readFileSync(MEMOIRE_PATH, "utf-8");
+      memoire = JSON.parse(raw);
+    } catch (err) {
+      console.error("❌ Erreur lecture mémoire locale :", err.message);
+    }
 
     for (const bloc of memoire.historique.slice().reverse()) {
       const interpr = interpreterSouvenir(bloc);
@@ -105,7 +113,7 @@ app.post("/poser-question", async (req, res) => {
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
     const base64 = Buffer.from(content).toString("base64");
 
-    // ✅ PATCH GitHub : vérifie meta.ok et parse en toute sécurité
+    // ✅ PATCH GitHub avec validation meta.ok
     const meta = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/mémoire/prisma_memory.json`, {
       headers: {
         Authorization: `Bearer ${GITHUB_TOKEN}`,
@@ -116,7 +124,7 @@ app.post("/poser-question", async (req, res) => {
     if (!meta.ok) {
       const errText = await meta.text();
       console.error("❌ GitHub API error:", meta.status, errText);
-      return res.status(500).json({ erreur: "Échec récupération SHA GitHub" });
+      return res.status(500).json({ erreur: "Erreur GitHub (SHA)", details: errText });
     }
 
     const metaJson = await meta.json();
