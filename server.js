@@ -27,7 +27,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
-const ETAT_PATH = path.resolve("core/mimetique/etatPrisma.json"); // ✅ corrigé
+const ETAT_PATH = path.resolve("core/mimetique/etatPrisma.json"); // chemin sécurisé
 const GITHUB_REPO = "Arutha79/prisma-railway4";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
@@ -78,7 +78,7 @@ app.post("/poser-question", async (req, res) => {
   if (!question) return res.status(400).json({ erreur: "Champ question manquant" });
 
   try {
-    // ✅ Lecture sécurisée de etatPrisma.json
+    // 🔐 Lecture sécurisée de etatPrisma.json
     let etat = {};
     try {
       const etatRaw = fs.readFileSync(ETAT_PATH, "utf-8");
@@ -115,17 +115,38 @@ app.post("/poser-question", async (req, res) => {
 
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
     const base64 = Buffer.from(content).toString("base64");
+
     const meta = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/mémoire/prisma_memory.json`, {
       headers: { Authorization: `Bearer ${GITHUB_TOKEN}` }
     });
-    const sha = (await meta.json()).sha;
+
+    // 🔍 Vérification de réponse JSON GitHub
+    let sha = "";
+    try {
+      const metaText = await meta.text();
+      if (metaText.trim().startsWith("{")) {
+        const metaJson = JSON.parse(metaText);
+        sha = metaJson.sha;
+      } else {
+        console.error("❌ Réponse GitHub non-JSON :", metaText);
+        return res.status(500).json({ erreur: "Réponse GitHub invalide. Vérifie ton token ou le chemin." });
+      }
+    } catch (err) {
+      console.error("❌ Erreur parsing JSON GitHub :", err.message);
+      return res.status(500).json({ erreur: "Erreur GitHub SHA", details: err.message });
+    }
+
     await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/mémoire/prisma_memory.json`, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${GITHUB_TOKEN}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ message: "🧠 Mise à jour mémoire Prisma", content: base64, sha })
+      body: JSON.stringify({
+        message: "🧠 Mise à jour mémoire Prisma",
+        content: base64,
+        sha
+      })
     });
 
     res.json({ reponse });
