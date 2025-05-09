@@ -21,9 +21,22 @@ const ETAT_PATH = path.resolve("core/mimetique/etatPrisma.json");
 const GITHUB_REPO = "Arutha79/prisma-railway4";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
+// ✅ Création automatique du dossier mémoire et fichier JSON
 fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
 if (!fs.existsSync(MEMOIRE_PATH)) {
-  fs.writeFileSync(MEMOIRE_PATH, JSON.stringify({ historique: [] }, null, 2), "utf-8");
+  fs.writeFileSync(
+    MEMOIRE_PATH,
+    JSON.stringify({
+      meta: {
+        origine: "Réinitialisation système",
+        message_ancre: "Mémoire créée automatiquement",
+        date_creation: new Date().toISOString(),
+        contexte: "Initialisation Railway"
+      },
+      historique: []
+    }, null, 2),
+    "utf-8"
+  );
 }
 
 // --- ROUTES ---
@@ -38,16 +51,6 @@ app.get("/ping-memoire", (req, res) => {
     });
   } catch (e) {
     res.status(500).json({ erreur: "Mémoire inaccessible", details: e.message });
-  }
-});
-
-app.get("/memoire", (req, res) => {
-  try {
-    const data = fs.readFileSync(MEMOIRE_PATH, "utf-8");
-    const json = JSON.parse(data);
-    res.json(json);
-  } catch (e) {
-    res.status(500).json({ erreur: "Lecture mémoire échouée", details: e.message });
   }
 });
 
@@ -92,6 +95,7 @@ app.post("/poser-question", async (req, res) => {
 
     const openai = new OpenAIApi(new Configuration({ apiKey: process.env.OPENAI_API_KEY }));
     const perso = getPersonnalite(etat.mode || "oracle");
+
     const completion = await openai.createChatCompletion({
       model: "gpt-4",
       messages: [
