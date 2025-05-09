@@ -26,16 +26,10 @@ if (!fs.existsSync(MEMOIRE_PATH)) {
   fs.writeFileSync(MEMOIRE_PATH, JSON.stringify({ historique: [] }, null, 2), "utf-8");
 }
 
-// --- ROUTES ---
-
 app.get("/ping-memoire", (req, res) => {
   try {
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
-    res.json({
-      status: "ok",
-      total: memoire.historique.length,
-      dernier: memoire.historique.slice(-1)[0]
-    });
+    res.json({ status: "ok", total: memoire.historique.length, dernier: memoire.historique.slice(-1)[0] });
   } catch (e) {
     res.status(500).json({ erreur: "Mémoire inaccessible", details: e.message });
   }
@@ -68,8 +62,6 @@ app.get("/souffles-apide", (req, res) => {
 
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
-  const date = new Date().toISOString();
-
   if (!question) return res.status(400).json({ erreur: "Champ question manquant" });
 
   try {
@@ -77,7 +69,7 @@ app.post("/poser-question", async (req, res) => {
     try {
       const etatRaw = fs.readFileSync(ETAT_PATH, "utf-8");
       etat = JSON.parse(etatRaw);
-    } catch {
+    } catch (err) {
       console.warn("⚠️ Lecture de etatPrisma.json échouée. Fallback sur mode 'oracle'.");
       etat.mode = "oracle";
     }
@@ -99,13 +91,14 @@ app.post("/poser-question", async (req, res) => {
     for (const bloc of memoire.historique.slice().reverse()) {
       const interpr = interpreterSouvenir(bloc);
       if (interpr) {
-        reponse = `${interpr}\n\n🧠 Souvenir du ${bloc.date} : "${bloc.contenu}"`;
+        reponse = `${interpr}\n\n🧠 Souvenir du ${bloc.date} : \"${bloc.contenu}\"`;
         break;
       }
     }
 
-    ajouterSouvenir(date, "Question utilisateur", question);
-    ajouterSouvenir(date, "Réponse Prisma", reponse);
+    const now = new Date().toISOString();
+    ajouterSouvenir(now, "Question utilisateur", question);
+    ajouterSouvenir(now, "Réponse Prisma", reponse);
 
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
     const base64 = Buffer.from(content).toString("base64");
