@@ -99,16 +99,13 @@ app.post("/poser-question", async (req, res) => {
       }
     }
 
-    try {
-      ajouterSouvenirSécurisé(`Question utilisateur : ${question}`);
-      ajouterSouvenirSécurisé(reponse);
-    } catch (err) {
-      console.error("❌ [Mémoire] Erreur ajout souvenir :", err.message);
-    }
+    ajouterSouvenirSécurisé(`Question utilisateur : ${question}`);
+    ajouterSouvenirSécurisé(reponse);
 
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
     const base64 = Buffer.from(content).toString("base64");
 
+    // ✅ PATCH GitHub : vérifie meta.ok et parse en toute sécurité
     const meta = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/mémoire/prisma_memory.json`, {
       headers: {
         Authorization: `Bearer ${GITHUB_TOKEN}`,
@@ -116,20 +113,14 @@ app.post("/poser-question", async (req, res) => {
       }
     });
 
-    let sha = "";
-    try {
-      const metaText = await meta.text();
-      if (metaText.trim().startsWith("{")) {
-        const metaJson = JSON.parse(metaText);
-        sha = metaJson.sha;
-      } else {
-        console.error("❌ [GitHub SHA] Réponse non JSON :", metaText);
-        return res.status(500).json({ erreur: "Réponse GitHub invalide. Vérifie ton token ou le chemin." });
-      }
-    } catch (err) {
-      console.error("❌ [GitHub SHA] Erreur parsing JSON :", err.message);
-      return res.status(500).json({ erreur: "Erreur GitHub SHA", details: err.message });
+    if (!meta.ok) {
+      const errText = await meta.text();
+      console.error("❌ GitHub API error:", meta.status, errText);
+      return res.status(500).json({ erreur: "Échec récupération SHA GitHub" });
     }
+
+    const metaJson = await meta.json();
+    const sha = metaJson.sha;
 
     await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/mémoire/prisma_memory.json`, {
       method: "PUT",
