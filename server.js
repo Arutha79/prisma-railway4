@@ -11,23 +11,14 @@ const { ajouterMemoireFichier } = require("./core/modes/ajouterMemoireFichier");
 const { ajouterSouvenirSécurisé } = require("./core/modes/memoire_secure");
 const { interpreterSouvenir } = require("./core/mimetique/interpretationMimetique");
 const { expliquerGlyphe, listerSouffles } = require("./core/mimetique/definitionsApide");
-const { interpreteSouffle } = require("./core/mimetique/modules/ZM_ORACLE");
-const { sculpterSouffle } = require("./core/mimetique/modules/ZM_SCULPTEUR");
-const { resonnerSouvenir } = require("./core/mimetique/modules/ZM_RÉSONANT");
-const { syntheseMemoire } = require("./core/mimetique/modules/ZM_ARCHIVISTE");
-const { extraireMutationSymbolique } = require("./core/mimetique/modules/ZM_SYNTHETISEUR");
-const { choisirPostureContextuelle } = require("./core/mimetique/modules/ZM_COORDONNEUR");
-const { extraireCarteSymbolique } = require("./core/mimetique/modules/ZM_CARTOGRAPHE");
-const { autoEvaluerMemoire } = require("./core/diagnostic/auto_evaluation");
 const { getPersonnalite } = require("./core/mimetique/presetsPersonnalite");
-const { rechercherSouvenirsSimilaires } = require("./core/vectoriel/searchMemoire");
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
 const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
-const ETAT_PATH = path.resolve("core/mimetique/etatPrisma.json"); // chemin sécurisé
+const ETAT_PATH = path.resolve("core/mimetique/etatPrisma.json");
 const GITHUB_REPO = "Arutha79/prisma-railway4";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
@@ -74,11 +65,9 @@ app.get("/souffles-apide", (req, res) => {
 
 app.post("/poser-question", async (req, res) => {
   const { question } = req.body;
-  const date = new Date().toISOString();
   if (!question) return res.status(400).json({ erreur: "Champ question manquant" });
 
   try {
-    // 🔐 Lecture sécurisée de etatPrisma.json
     let etat = {};
     try {
       const etatRaw = fs.readFileSync(ETAT_PATH, "utf-8");
@@ -100,8 +89,8 @@ app.post("/poser-question", async (req, res) => {
     });
 
     let reponse = completion.data.choices[0].message.content;
-
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
+
     for (const bloc of memoire.historique.slice().reverse()) {
       const interpr = interpreterSouvenir(bloc);
       if (interpr) {
@@ -110,17 +99,23 @@ app.post("/poser-question", async (req, res) => {
       }
     }
 
-    ajouterSouvenirSécurisé(`Question utilisateur : ${question}`);
-    ajouterSouvenirSécurisé(reponse);
+    try {
+      ajouterSouvenirSécurisé(`Question utilisateur : ${question}`);
+      ajouterSouvenirSécurisé(reponse);
+    } catch (err) {
+      console.error("❌ [Mémoire] Erreur ajout souvenir :", err.message);
+    }
 
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
     const base64 = Buffer.from(content).toString("base64");
 
     const meta = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/mémoire/prisma_memory.json`, {
-      headers: { Authorization: `Bearer ${GITHUB_TOKEN}` }
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        "User-Agent": "prisma-agent"
+      }
     });
 
-    // 🔍 Vérification de réponse JSON GitHub
     let sha = "";
     try {
       const metaText = await meta.text();
@@ -128,11 +123,11 @@ app.post("/poser-question", async (req, res) => {
         const metaJson = JSON.parse(metaText);
         sha = metaJson.sha;
       } else {
-        console.error("❌ Réponse GitHub non-JSON :", metaText);
+        console.error("❌ [GitHub SHA] Réponse non JSON :", metaText);
         return res.status(500).json({ erreur: "Réponse GitHub invalide. Vérifie ton token ou le chemin." });
       }
     } catch (err) {
-      console.error("❌ Erreur parsing JSON GitHub :", err.message);
+      console.error("❌ [GitHub SHA] Erreur parsing JSON :", err.message);
       return res.status(500).json({ erreur: "Erreur GitHub SHA", details: err.message });
     }
 
@@ -140,7 +135,8 @@ app.post("/poser-question", async (req, res) => {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${GITHUB_TOKEN}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "User-Agent": "prisma-agent"
       },
       body: JSON.stringify({
         message: "🧠 Mise à jour mémoire Prisma",
