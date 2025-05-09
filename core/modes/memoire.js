@@ -7,6 +7,7 @@ const LOG_PATH = path.resolve("mémoire/log_souvenirs.txt");
 function ajouterSouvenir(date, titre, contenu, type = "souvenir") {
   try {
     fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
+
     if (!fs.existsSync(MEMOIRE_PATH)) {
       fs.writeFileSync(MEMOIRE_PATH, JSON.stringify({ historique: [] }, null, 2), "utf-8");
     }
