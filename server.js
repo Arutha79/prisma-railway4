@@ -1,4 +1,3 @@
-// server.js
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -9,7 +8,7 @@ const { Configuration, OpenAIApi } = require("openai");
 require("dotenv").config();
 
 const { ajouterMemoireFichier } = require("./core/modes/ajouterMemoireFichier");
-const { ajouterSouvenirSécurisé } = require("./core/modes/memoire_secure"); // ✅ Chemin corrigé
+const { ajouterSouvenirSécurisé } = require("./core/modes/memoire_secure");
 const { interpreterSouvenir } = require("./core/mimetique/interpretationMimetique");
 const { expliquerGlyphe, listerSouffles } = require("./core/mimetique/definitionsApide");
 const { interpreteSouffle } = require("./core/mimetique/modules/ZM_ORACLE");
@@ -28,7 +27,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
-const ETAT_PATH = "./core/mimetique/etatPrisma.json";
+const ETAT_PATH = path.resolve("core/mimetique/etatPrisma.json"); // ✅ corrigé
 const GITHUB_REPO = "Arutha79/prisma-railway4";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
@@ -79,8 +78,17 @@ app.post("/poser-question", async (req, res) => {
   if (!question) return res.status(400).json({ erreur: "Champ question manquant" });
 
   try {
+    // ✅ Lecture sécurisée de etatPrisma.json
+    let etat = {};
+    try {
+      const etatRaw = fs.readFileSync(ETAT_PATH, "utf-8");
+      etat = JSON.parse(etatRaw);
+    } catch (err) {
+      console.warn("⚠️ Lecture de etatPrisma.json échouée. Fallback sur mode 'oracle'.");
+      etat.mode = "oracle";
+    }
+
     const openai = new OpenAIApi(new Configuration({ apiKey: process.env.OPENAI_API_KEY }));
-    const etat = JSON.parse(fs.readFileSync(ETAT_PATH, "utf-8"));
     const perso = getPersonnalite(etat.mode || "oracle");
     const completion = await openai.createChatCompletion({
       model: "gpt-4",
@@ -127,6 +135,5 @@ app.post("/poser-question", async (req, res) => {
   }
 });
 
-// Dernières lignes
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Prisma en ligne sur port ${PORT}`));
