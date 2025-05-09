@@ -9,7 +9,7 @@ const { Configuration, OpenAIApi } = require("openai");
 require("dotenv").config();
 
 const { ajouterMemoireFichier } = require("./core/modes/ajouterMemoireFichier");
-const { ajouterSouvenirSécurisé } = require("./modes/memoire_secure"); // ✅ Nouveau
+const { ajouterSouvenirSécurisé } = require("./core/modes/memoire_secure"); // ✅ Chemin corrigé
 const { interpreterSouvenir } = require("./core/mimetique/interpretationMimetique");
 const { expliquerGlyphe, listerSouffles } = require("./core/mimetique/definitionsApide");
 const { interpreteSouffle } = require("./core/mimetique/modules/ZM_ORACLE");
@@ -127,9 +127,6 @@ app.post("/poser-question", async (req, res) => {
   }
 });
 
-// (Toutes les autres routes restent inchangées)
-
-// ...
-// Dernières lignes :
+// Dernières lignes
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Prisma en ligne sur port ${PORT}`));
