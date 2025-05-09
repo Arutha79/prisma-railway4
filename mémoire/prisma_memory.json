@@ -1,4 +1,4 @@
-echo '{
+{
   "meta": {
     "origine": "Réinitialisation système",
     "message_ancre": "Fichier mémoire restauré automatiquement après corruption",
@@ -6,4 +6,4 @@ echo '{
     "contexte": "Fichier recréé pour garantir la stabilité du système Prisma"
   },
   "historique": []
-}' > mémoire/prisma_memory.json
+}
