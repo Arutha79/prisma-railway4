@@ -358,6 +358,12 @@
       "titre": "Test manuel de création de souvenir",
       "contenu": "Ce souvenir a été ajouté manuellement par Alice à la demande de Guillaume pour tester le bon fonctionnement de la mémoire de Prisma. Il sert de trace technique et symbolique de vérification.",
       "type": "souvenir"
+    },
+    {
+      "date": "2025-05-11T23:40:00Z",
+      "titre": "Test log manuel — souvenir observé",
+      "contenu": "Ce souvenir a été créé par Alice à la demande de Guillaume pour tester l’écriture mémoire et la propagation dans les logs. Il sert de repère de vérification directe, sans souffle mimétique, mais avec ancrage système clair.",
+      "type": "souvenir"
     }
   ]
 }
