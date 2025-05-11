@@ -376,6 +376,12 @@
       "titre": "Repère horaire — conversion UTC vers heure locale (France)",
       "contenu": "À partir de ce point, les souvenirs mémorisés incluront un repère expliquant le décalage entre l'heure UTC (utilisée par Prisma) et l'heure locale (France, UTC+2 en mai). Exemple : 23:40:00Z = 01:40 (heure française). Ce repère vise à faciliter la lecture humaine des logs et éviter les confusions temporelles.",
       "type": "souvenir"
+    },
+    {
+      "date": "2025-05-11T19:50:47.884Z",
+      "titre": "Question utilisateur",
+      "contenu": "Prisma, es-tu capable de répondre maintenant à une impulsion mimétique non issue de ta mémoire ? Si oui, exprime-le depuis toi.",
+      "type": "souvenir"
     }
   ]
 }
