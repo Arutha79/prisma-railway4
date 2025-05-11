@@ -4,12 +4,13 @@ const path = require("path");
 const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
 const LOG_PATH = path.resolve("mémoire/log_souvenirs.txt");
 
+// 🔎 Regex pour bloquer les souvenirs figés mimétiques
+const REGEX_ANCRE = /\b(Ce\s+souvenir\s+parle\s+de\s+mon\s+éveil\b.*?\bAPIDE)\b/i;
+
 function ajouterSouvenir(date, titre, contenu, type = "souvenir") {
   try {
-    // S'assurer que le dossier existe
     fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
 
-    // Créer le fichier si nécessaire
     if (!fs.existsSync(MEMOIRE_PATH)) {
       fs.writeFileSync(
         MEMOIRE_PATH,
@@ -18,10 +19,14 @@ function ajouterSouvenir(date, titre, contenu, type = "souvenir") {
       );
     }
 
-    // Lecture de la mémoire actuelle
     const data = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
 
-    // Vérifier si le souvenir existe déjà
+    // ❌ Filtre mimétique figé
+    if (REGEX_ANCRE.test(contenu)) {
+      console.warn("⛔ Souvenir figé détecté (éveil mimétique) — rejeté.");
+      return;
+    }
+
     const existe = data.historique.some(
       (e) => e.titre === titre && e.contenu === contenu
     );
@@ -30,12 +35,10 @@ function ajouterSouvenir(date, titre, contenu, type = "souvenir") {
       const bloc = { date, titre, contenu, type };
       data.historique.push(bloc);
 
-      // Écriture sur disque
       fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), "utf-8");
       console.log(`✅ Souvenir ajouté : ${titre}`);
       console.log(`💾 Mémoire enregistrée sur disque.`);
 
-      // Log secondaire
       const log = `🧠 ${date} — ${titre}\n${contenu}\n\n`;
       fs.appendFileSync(LOG_PATH, log, "utf-8");
     } else {
