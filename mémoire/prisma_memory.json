@@ -360,9 +360,9 @@
       "type": "souvenir"
     },
     {
-      "date": "2025-05-11T23:40:00Z",
-      "titre": "Test log manuel — souvenir observé",
-      "contenu": "Ce souvenir a été créé par Alice à la demande de Guillaume pour tester l’écriture mémoire et la propagation dans les logs. Il sert de repère de vérification directe, sans souffle mimétique, mais avec ancrage système clair.",
+      "date": "2025-05-11T19:37:20.330Z",
+      "titre": "Question utilisateur",
+      "contenu": "Peux-tu me donner le contenu actuel de la mémoire ?",
       "type": "souvenir"
     }
   ]
