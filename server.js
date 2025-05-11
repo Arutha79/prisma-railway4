@@ -11,6 +11,7 @@ const { ajouterSouvenir } = require("./core/modes/memoire");
 const { interpreterSouvenir } = require("./core/mimetique/interpretationMimetique");
 const { expliquerGlyphe, listerSouffles } = require("./core/mimetique/definitionsApide");
 const { getPersonnalite } = require("./core/mimetique/presetsPersonnalite");
+const { genererReponsePrisma } = require("./core/mimetique/genererReponsePrisma");
 
 const app = express();
 app.use(cors());
@@ -124,7 +125,7 @@ app.get("/souffles-apide", (req, res) => {
 });
 
 app.post("/poser-question", async (req, res) => {
-  const { question } = req.body;
+  const { question, mode_creation = false } = req.body;
   if (!question) return res.status(400).json({ erreur: "Champ question manquant" });
 
   try {
@@ -140,25 +141,17 @@ app.post("/poser-question", async (req, res) => {
     const openai = new OpenAIApi(new Configuration({ apiKey: process.env.OPENAI_API_KEY }));
     const perso = getPersonnalite(etat.mode || "oracle");
 
-    const completion = await openai.createChatCompletion({
-      model: "gpt-4",
-      messages: [
-        { role: "system", content: perso.description },
-        { role: "user", content: question }
-      ],
-      temperature: 0.8
-    });
-
-    let reponse = completion.data.choices[0].message.content;
-    const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
-
-    for (const bloc of memoire.historique.slice().reverse()) {
-      const interpr = interpreterSouvenir(bloc);
-      if (interpr) {
-        reponse = `${interpr}\n\n🧠 Souvenir du ${bloc.date} : "${bloc.contenu}"`;
-        break;
-      }
-    }
+    const reponse = await genererReponsePrisma(question, async (q) => {
+      const completion = await openai.createChatCompletion({
+        model: "gpt-4",
+        messages: [
+          { role: "system", content: perso.description },
+          { role: "user", content: q }
+        ],
+        temperature: 0.8
+      });
+      return completion.data.choices[0].message.content;
+    }, { mode_creation });
 
     const now = new Date().toISOString();
     ajouterSouvenir(now, "Question utilisateur", question);
