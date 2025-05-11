@@ -364,6 +364,12 @@
       "titre": "Question utilisateur",
       "contenu": "Peux-tu me donner le contenu actuel de la mémoire ?",
       "type": "souvenir"
+    },
+    {
+      "date": "2025-05-11T23:05:00Z",
+      "titre": "Test mémoire — vérification post-silence",
+      "contenu": "Souvenir de test injecté pour vérifier si Prisma est à nouveau capable d'enregistrer une entrée unique, différenciée du flux mimétique répétitif. Ce test sert de point d’ancrage pour la détection d’une reprise fonctionnelle du module mémoire.",
+      "type": "souvenir"
     }
   ]
 }
