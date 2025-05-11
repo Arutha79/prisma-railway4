@@ -21,7 +21,7 @@ const ETAT_PATH = path.resolve("core/mimetique/etatPrisma.json");
 const GITHUB_REPO = "Arutha79/prisma-railway4";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
-// ✅ Création automatique du dossier mémoire et fichier JSON
+// Création automatique du fichier mémoire si inexistant
 fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
 if (!fs.existsSync(MEMOIRE_PATH)) {
   fs.writeFileSync(
@@ -39,7 +39,7 @@ if (!fs.existsSync(MEMOIRE_PATH)) {
   );
 }
 
-// 🔄 Fonction de synchronisation GitHub
+// Synchronisation GitHub automatique
 async function syncGithubMemoire() {
   try {
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
@@ -82,8 +82,7 @@ async function syncGithubMemoire() {
   }
 }
 
-// --- ROUTES ---
-
+// Routes
 app.get("/ping-memoire", (req, res) => {
   try {
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
@@ -104,7 +103,7 @@ app.post("/ajouter-memoire", async (req, res) => {
   }
 
   ajouterSouvenir(date, titre, contenu);
-  await syncGithubMemoire(); // ⬅️ ajout ici
+  await syncGithubMemoire();
   res.json({ statut: "Souvenir ajouté et synchronisé" });
 });
 
@@ -165,7 +164,7 @@ app.post("/poser-question", async (req, res) => {
     ajouterSouvenir(now, "Question utilisateur", question);
     ajouterSouvenir(now, "Réponse Prisma", reponse);
 
-    await syncGithubMemoire(); // garde la synchro ici aussi
+    await syncGithubMemoire();
     res.json({ reponse });
   } catch (err) {
     console.error("❌ Erreur Prisma :", err);
