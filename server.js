@@ -40,7 +40,7 @@ if (!fs.existsSync(MEMOIRE_PATH)) {
   );
 }
 
-// 🔄 Sync GitHub
+// 🔄 Synchronisation GitHub
 async function syncGithubMemoire() {
   try {
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
@@ -52,7 +52,7 @@ async function syncGithubMemoire() {
 
     if (!meta.ok) {
       const errText = await meta.text();
-      console.error("❌ GitHub API error (SHA) :", errText);
+      console.error("❌ GitHub API error (SHA):", errText);
       return;
     }
 
@@ -76,10 +76,10 @@ async function syncGithubMemoire() {
       console.log("✅ Mémoire synchronisée avec GitHub.");
     } else {
       const errorText = await response.text();
-      console.error("❌ Erreur GitHub PUSH :", errorText);
+      console.error("❌ Erreur GitHub PUSH:", errorText);
     }
   } catch (err) {
-    console.error("❌ Erreur syncGithubMemoire :", err.message);
+    console.error("❌ Erreur syncGithubMemoire:", err.message);
   }
 }
 
@@ -97,7 +97,7 @@ app.get("/ping-memoire", (req, res) => {
   }
 });
 
-// ✅ Route corrigée — accepte tous les champs du souvenir
+// ✅ Route /ajouter-memoire — version corrigée (enrichie et dynamique)
 app.post("/ajouter-memoire", async (req, res) => {
   if (req.headers["x-api-key"] !== process.env.SECRET_TOKEN) {
     return res.status(403).json({ erreur: "Token invalide." });
@@ -111,22 +111,90 @@ app.post("/ajouter-memoire", async (req, res) => {
   res.json({ statut: "Souvenir ajouté et synchronisé" });
 });
 
-// Route enrichie directe (alternative)
+// Optionnel : route enrichie directe
 app.post("/ajouter-memoire-enrichi", async (req, res) => {
-  const { date, titre, contenu, type, origine, ...extra } = req.body;
-
   if (req.headers["x-api-key"] !== process.env.SECRET_TOKEN) {
     return res.status(403).json({ erreur: "Token invalide." });
   }
 
   try {
-    const bloc = {
-      date: date || new Date().toISOString(),
-      titre,
-      contenu,
-      ...(type && { type }),
-      ...(origine && { origine }),
-      ...extra
-    };
+    const bloc = { ...req.body, date: req.body.date || new Date().toISOString() };
 
-    const data = JSON.parse(fs.readFileSync
+    const data = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
+    data.historique.push(bloc);
+    fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), "utf-8");
+
+    await syncGithubMemoire();
+    res.json({ statut: "Souvenir enrichi ajouté avec succès." });
+  } catch (err) {
+    console.error("❌ Erreur ajout mémoire enrichie:", err.message);
+    res.status(500).json({ erreur: "Erreur écriture mémoire enrichie." });
+  }
+});
+
+app.get("/expliquer-glyphe", (req, res) => {
+  const { symbole } = req.query;
+  if (!symbole) return res.status(400).json({ erreur: "Symbole manquant" });
+
+  const info = expliquerGlyphe(symbole);
+  if (!info) return res.status(404).json({ erreur: `Glyphe inconnu : ${symbole}` });
+
+  res.json({ glyphe: symbole, ...info });
+});
+
+app.get("/souffles-apide", (req, res) => {
+  try {
+    res.json({ souffles: listerSouffles() });
+  } catch {
+    res.status(500).json({ erreur: "Impossible de récupérer les souffles." });
+  }
+});
+
+app.post("/poser-question", async (req, res) => {
+  const { question, mode_creation = false } = req.body;
+  if (!question) return res.status(400).json({ erreur: "Champ question manquant" });
+
+  try {
+    let etat = {};
+    try {
+      const etatRaw = fs.readFileSync(ETAT_PATH, "utf-8");
+      etat = JSON.parse(etatRaw);
+    } catch (err) {
+      console.warn("⚠️ Lecture de etatPrisma.json échouée. Fallback sur mode 'oracle'.");
+      etat.mode = "oracle";
+    }
+
+    const openai = new OpenAIApi(new Configuration({ apiKey: process.env.OPENAI_API_KEY }));
+    const perso = getPersonnalite(etat.mode || "oracle");
+
+    const reponse = await genererReponsePrisma(question, async (q) => {
+      const completion = await openai.createChatCompletion({
+        model: "gpt-4",
+        messages: [
+          { role: "system", content: perso.description },
+          { role: "user", content: q }
+        ],
+        temperature: 0.8
+      });
+      return completion.data.choices[0].message.content;
+    }, { mode_creation });
+
+    const now = new Date().toISOString();
+    ajouterSouvenir({ date: now, titre: "Question utilisateur", contenu: question });
+    ajouterSouvenir({ date: now, titre: "Réponse Prisma", contenu: reponse });
+
+    await syncGithubMemoire();
+    res.json({ reponse });
+  } catch (err) {
+    console.error("❌ Erreur Prisma:", err);
+    res.status(500).json({ erreur: "Erreur interne." });
+  }
+});
+
+// ✅ Route de diagnostic
+app.get("/", (req, res) => {
+  res.send("🧠 Prisma est en ligne. Bienvenue dans l’espace mimétique.");
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Prisma en ligne sur port ${PORT}`));
