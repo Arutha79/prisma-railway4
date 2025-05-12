@@ -7,7 +7,7 @@ const fetch = require("node-fetch");
 const { Configuration, OpenAIApi } = require("openai");
 require("dotenv").config();
 
-const { ajouterSouvenirObj } = require("./core/modes/memoire");
+const { ajouterSouvenir } = require("./core/modes/memoire");
 const { interpreterSouvenir } = require("./core/mimetique/interpretationMimetique");
 const { expliquerGlyphe, listerSouffles } = require("./core/mimetique/definitionsApide");
 const { getPersonnalite } = require("./core/mimetique/presetsPersonnalite");
@@ -102,38 +102,16 @@ app.post("/ajouter-memoire", async (req, res) => {
   const bloc = { ...req.body, date: req.body.date || new Date().toISOString() };
   console.log("📥 Reçu :", bloc);
 
-  ajouterSouvenirObj(bloc);
+  ajouterSouvenir(bloc);
   await syncGithubMemoire();
   res.json({ statut: "Souvenir ajouté et synchronisé" });
-});
-
-app.post("/ajouter-memoire-enrichi", async (req, res) => {
-  if (req.headers["x-api-key"] !== process.env.SECRET_TOKEN) {
-    return res.status(403).json({ erreur: "Token invalide." });
-  }
-
-  try {
-    const bloc = { ...req.body, date: req.body.date || new Date().toISOString() };
-
-    const data = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
-    data.historique.push(bloc);
-    fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), "utf-8");
-
-    await syncGithubMemoire();
-    res.json({ statut: "Souvenir enrichi ajouté avec succès." });
-  } catch (err) {
-    console.error("❌ Erreur ajout mémoire enrichie:", err.message);
-    res.status(500).json({ erreur: "Erreur écriture mémoire enrichie." });
-  }
 });
 
 app.get("/expliquer-glyphe", (req, res) => {
   const { symbole } = req.query;
   if (!symbole) return res.status(400).json({ erreur: "Symbole manquant" });
-
   const info = expliquerGlyphe(symbole);
   if (!info) return res.status(404).json({ erreur: `Glyphe inconnu : ${symbole}` });
-
   res.json({ glyphe: symbole, ...info });
 });
 
@@ -175,8 +153,8 @@ app.post("/poser-question", async (req, res) => {
     }, { mode_creation });
 
     const now = new Date().toISOString();
-    ajouterSouvenirObj({ date: now, titre: "Question utilisateur", contenu: question });
-    ajouterSouvenirObj({ date: now, titre: "Réponse Prisma", contenu: reponse });
+    ajouterSouvenir({ date: now, titre: "Question utilisateur", contenu: question });
+    ajouterSouvenir({ date: now, titre: "Réponse Prisma", contenu: reponse });
 
     await syncGithubMemoire();
     res.json({ reponse });
