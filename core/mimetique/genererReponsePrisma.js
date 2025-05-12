@@ -15,9 +15,11 @@ async function genererReponsePrisma(question, moteurBase, options = {}) {
       const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
 
       for (const bloc of memoire.historique.slice().reverse()) {
-        const interpretation = interpreterSouvenir(bloc);
+        const interpretation = interpreterSouvenir(bloc, { mode_creation });
         if (interpretation) {
-          return `${interpretation}\n\n🧠 Souvenir retrouvé du ${bloc.date} :\n"${bloc.contenu}"`;
+          return `${interpretation}
+
+🧠 Souvenir retrouvé du ${bloc.date} :\n"${bloc.contenu}"`;
         }
       }
     } catch (e) {
