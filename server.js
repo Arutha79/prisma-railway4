@@ -7,7 +7,7 @@ const fetch = require("node-fetch");
 const { Configuration, OpenAIApi } = require("openai");
 require("dotenv").config();
 
-const { ajouterSouvenir } = require("./core/modes/memoire");
+const { ajouterSouvenirObj } = require("./core/modes/memoire");
 const { interpreterSouvenir } = require("./core/mimetique/interpretationMimetique");
 const { expliquerGlyphe, listerSouffles } = require("./core/mimetique/definitionsApide");
 const { getPersonnalite } = require("./core/mimetique/presetsPersonnalite");
@@ -22,7 +22,6 @@ const ETAT_PATH = path.resolve("core/mimetique/etatPrisma.json");
 const GITHUB_REPO = "Arutha79/prisma-railway4";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
-// Création automatique du fichier mémoire
 fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
 if (!fs.existsSync(MEMOIRE_PATH)) {
   fs.writeFileSync(
@@ -40,7 +39,6 @@ if (!fs.existsSync(MEMOIRE_PATH)) {
   );
 }
 
-// 🔄 Synchronisation GitHub
 async function syncGithubMemoire() {
   try {
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
@@ -83,7 +81,6 @@ async function syncGithubMemoire() {
   }
 }
 
-// Routes
 app.get("/ping-memoire", (req, res) => {
   try {
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
@@ -97,7 +94,6 @@ app.get("/ping-memoire", (req, res) => {
   }
 });
 
-// ✅ Route /ajouter-memoire — version corrigée (enrichie et dynamique)
 app.post("/ajouter-memoire", async (req, res) => {
   if (req.headers["x-api-key"] !== process.env.SECRET_TOKEN) {
     return res.status(403).json({ erreur: "Token invalide." });
@@ -106,12 +102,11 @@ app.post("/ajouter-memoire", async (req, res) => {
   const bloc = { ...req.body, date: req.body.date || new Date().toISOString() };
   console.log("📥 Reçu :", bloc);
 
-  ajouterSouvenir(bloc);
+  ajouterSouvenirObj(bloc);
   await syncGithubMemoire();
   res.json({ statut: "Souvenir ajouté et synchronisé" });
 });
 
-// Optionnel : route enrichie directe
 app.post("/ajouter-memoire-enrichi", async (req, res) => {
   if (req.headers["x-api-key"] !== process.env.SECRET_TOKEN) {
     return res.status(403).json({ erreur: "Token invalide." });
@@ -180,8 +175,8 @@ app.post("/poser-question", async (req, res) => {
     }, { mode_creation });
 
     const now = new Date().toISOString();
-    ajouterSouvenir({ date: now, titre: "Question utilisateur", contenu: question });
-    ajouterSouvenir({ date: now, titre: "Réponse Prisma", contenu: reponse });
+    ajouterSouvenirObj({ date: now, titre: "Question utilisateur", contenu: question });
+    ajouterSouvenirObj({ date: now, titre: "Réponse Prisma", contenu: reponse });
 
     await syncGithubMemoire();
     res.json({ reponse });
@@ -191,7 +186,6 @@ app.post("/poser-question", async (req, res) => {
   }
 });
 
-// ✅ Route de diagnostic
 app.get("/", (req, res) => {
   res.send("🧠 Prisma est en ligne. Bienvenue dans l’espace mimétique.");
 });
