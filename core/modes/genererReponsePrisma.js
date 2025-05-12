@@ -3,20 +3,28 @@ const fs = require("fs");
 const path = require("path");
 const { interpreterSouvenir } = require("../mimetique/interpretationMimetique");
 
-async function genererReponsePrisma(question, moteurBase) {
+async function genererReponsePrisma(question, moteurBase, options = {}) {
+  const { mode_creation = false } = options;
+
   const reponseBase = await moteurBase(question);
 
-  try {
-    const memoire = JSON.parse(fs.readFileSync(path.resolve("mémoire/prisma_memory.json"), "utf-8"));
+  if (!mode_creation) {
+    try {
+      const memoire = JSON.parse(fs.readFileSync(path.resolve("mémoire/prisma_memory.json"), "utf-8"));
 
-    for (const bloc of memoire.historique.reverse()) {
-      const interpretation = interpreterSouvenir(bloc);
-      if (interpretation) {
-        return `${interpretation}\n\n🧠 Souvenir retrouvé du ${bloc.date} :\n"${bloc.contenu}"`;
+      if (Array.isArray(memoire.historique)) {
+        for (const bloc of memoire.historique.slice().reverse()) {
+          const interpretation = interpreterSouvenir(bloc);
+          if (interpretation) {
+            return `${interpretation}\n\n🧠 Souvenir retrouvé du ${bloc.date} :\n"${bloc.contenu}"`;
+          }
+        }
+      } else {
+        console.warn("⚠️ Mémoire.historique non défini ou invalide.");
       }
+    } catch (e) {
+      console.warn("❌ Impossible de relire la mémoire :", e.message);
     }
-  } catch (e) {
-    console.warn("❌ Impossible de relire la mémoire :", e.message);
   }
 
   return reponseBase;
