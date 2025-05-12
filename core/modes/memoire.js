@@ -7,7 +7,7 @@ const LOG_PATH = path.resolve("mémoire/log_souvenirs.txt");
 // 🔎 Regex pour bloquer les souvenirs figés mimétiques
 const REGEX_ANCRE = /\b(Ce\s+souvenir\s+parle\s+de\s+mon\s+éveil\b.*?\bAPIDE)\b/i;
 
-function ajouterSouvenir(date, titre, contenu, type = "souvenir") {
+function ajouterSouvenir(date, titre, contenu, type = "souvenir", origine = null) {
   try {
     fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
 
@@ -32,7 +32,10 @@ function ajouterSouvenir(date, titre, contenu, type = "souvenir") {
     );
 
     if (!existe) {
-      const bloc = { date, titre, contenu, type };
+      const bloc = { date, titre, contenu };
+      if (type) bloc.type = type;
+      if (origine) bloc.origine = origine;
+
       data.historique.push(bloc);
 
       fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), "utf-8");
