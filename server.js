@@ -22,7 +22,7 @@ const ETAT_PATH = path.resolve("core/mimetique/etatPrisma.json");
 const GITHUB_REPO = "Arutha79/prisma-railway4";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
-// Création automatique du fichier mémoire si inexistant
+// Création automatique du fichier mémoire
 fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
 if (!fs.existsSync(MEMOIRE_PATH)) {
   fs.writeFileSync(
@@ -40,7 +40,7 @@ if (!fs.existsSync(MEMOIRE_PATH)) {
   );
 }
 
-// Synchronisation GitHub automatique
+// 🔄 Sync GitHub
 async function syncGithubMemoire() {
   try {
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
@@ -108,6 +108,36 @@ app.post("/ajouter-memoire", async (req, res) => {
   res.json({ statut: "Souvenir ajouté et synchronisé" });
 });
 
+// ✅ Nouvelle route enrichie
+app.post("/ajouter-memoire-enrichi", async (req, res) => {
+  const { date, titre, contenu, type, origine, ...extra } = req.body;
+
+  if (req.headers["x-api-key"] !== process.env.SECRET_TOKEN) {
+    return res.status(403).json({ erreur: "Token invalide." });
+  }
+
+  try {
+    const bloc = {
+      date: date || new Date().toISOString(),
+      titre,
+      contenu,
+      ...(type && { type }),
+      ...(origine && { origine }),
+      ...extra
+    };
+
+    const data = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
+    data.historique.push(bloc);
+    fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), "utf-8");
+
+    await syncGithubMemoire();
+    res.json({ statut: "Souvenir enrichi ajouté avec succès." });
+  } catch (err) {
+    console.error("❌ Erreur ajout mémoire enrichie :", err.message);
+    res.status(500).json({ erreur: "Erreur écriture mémoire enrichie." });
+  }
+});
+
 app.get("/expliquer-glyphe", (req, res) => {
   const { symbole } = req.query;
   if (!symbole) return res.status(400).json({ erreur: "Symbole manquant" });
@@ -165,7 +195,7 @@ app.post("/poser-question", async (req, res) => {
   }
 });
 
-// ✅ Nouvelle route racine pour les tests Railway ou navigateur
+// ✅ Route de diagnostic simple
 app.get("/", (req, res) => {
   res.send("🧠 Prisma est en ligne. Bienvenue dans l’espace mimétique.");
 });
