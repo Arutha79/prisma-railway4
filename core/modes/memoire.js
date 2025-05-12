@@ -1,32 +1,3 @@
-const fs = require("fs");
-const path = require("path");
-
-const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
-const LOG_PATH = path.resolve("mémoire/log_souvenirs.txt");
-
-function chargerMemoire() {
-  if (!fs.existsSync(MEMOIRE_PATH)) return { historique: [] };
-  try {
-    return JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
-  } catch (err) {
-    console.error("❌ Erreur lecture mémoire:", err.message);
-    return { historique: [] };
-  }
-}
-
-function sauvegarderMemoire(data) {
-  try {
-    fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), "utf-8");
-    console.log("💾 Écriture mémoire réussie :", MEMOIRE_PATH);
-  } catch (err) {
-    console.error("❌ Erreur sauvegarde mémoire:", err.message);
-  }
-}
-
-function ajouterSouvenir(date, titre, contenu, type = "souvenir") {
-  ajouterSouvenirObj({ date, titre, contenu, type });
-}
-
 function ajouterSouvenirObj(souvenir) {
   try {
     fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
@@ -36,7 +7,16 @@ function ajouterSouvenirObj(souvenir) {
     }
 
     const data = chargerMemoire();
-    const existe = data.historique.some(e => e.titre === souvenir.titre && e.contenu === souvenir.contenu);
+
+    // 🔐 Correction : on s’assure que data.historique est un tableau
+    if (!Array.isArray(data.historique)) {
+      console.warn("⚠️ 'historique' absent ou non tableau, initialisation forcée.");
+      data.historique = [];
+    }
+
+    const existe = data.historique.some(e =>
+      e.titre === souvenir.titre && e.contenu === souvenir.contenu
+    );
 
     if (!existe) {
       const bloc = {
@@ -63,10 +43,3 @@ function ajouterSouvenirObj(souvenir) {
     console.error("❌ Erreur ajout souvenir:", err.message);
   }
 }
-
-module.exports = {
-  ajouterSouvenir,
-  ajouterSouvenirObj,
-  chargerMemoire,
-  sauvegarderMemoire
-};
