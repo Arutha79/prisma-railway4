@@ -5,7 +5,7 @@ const MEMORY_DIR = path.resolve("mémoire");
 const MEMORY_FILE = path.join(MEMORY_DIR, "prisma_memory.json");
 const LOG_FILE = path.join(MEMORY_DIR, "log_souvenirs.txt");
 
-function ajouterMemoireFichier({ date, titre, contenu }) {
+function ajouterMemoireEnrichi(data) {
   try {
     if (!fs.existsSync(MEMORY_DIR)) {
       fs.mkdirSync(MEMORY_DIR, { recursive: true });
@@ -21,24 +21,27 @@ function ajouterMemoireFichier({ date, titre, contenu }) {
       console.log("📄 Fichier mémoire initialisé.");
     }
 
+    // Check duplication (based on titre + contenu)
     const existe = mémoire.historique.some(
-      (e) => e.titre === titre && e.contenu === contenu
+      (e) => e.titre === data.titre && e.contenu === data.contenu
     );
     if (!existe) {
-      const bloc = { date, titre, contenu };
-      mémoire.historique.push(bloc);
+      mémoire.historique.push(data);
 
-      // ÉCRITURE RÉELLE
       fs.writeFileSync(MEMORY_FILE, JSON.stringify(mémoire, null, 2), "utf-8");
-      fs.appendFileSync(LOG_FILE, `[${date}] ${titre}\n${contenu}\n\n`, "utf-8");
+      fs.appendFileSync(
+        LOG_FILE,
+        `[${data.date}] ${data.titre}\n${data.contenu}\n\n`,
+        "utf-8"
+      );
 
-      console.log("✅ Écriture effective : souvenir ajouté !");
+      console.log("✅ Souvenir enrichi ajouté !");
     } else {
-      console.log("⚠️ Souvenir déjà présent. Ignoré.");
+      console.log("⚠️ Souvenir déjà existant. Non réécrit.");
     }
   } catch (err) {
-    console.error("❌ Erreur lors de l'écriture mémoire :", err.message);
+    console.error("❌ Erreur ajout mémoire enrichie :", err.message);
   }
 }
 
-module.exports = { ajouterMemoireFichier };
+module.exports = { ajouterMemoireEnrichi };
