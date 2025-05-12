@@ -165,5 +165,10 @@ app.post("/poser-question", async (req, res) => {
   }
 });
 
+// ✅ Nouvelle route racine pour les tests Railway ou navigateur
+app.get("/", (req, res) => {
+  res.send("🧠 Prisma est en ligne. Bienvenue dans l’espace mimétique.");
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Prisma en ligne sur port ${PORT}`));
