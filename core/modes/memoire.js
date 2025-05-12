@@ -17,6 +17,7 @@ function chargerMemoire() {
 function sauvegarderMemoire(data) {
   try {
     fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), "utf-8");
+    console.log("💾 Écriture mémoire réussie :", MEMOIRE_PATH);
   } catch (err) {
     console.error("❌ Erreur sauvegarde mémoire:", err.message);
   }
@@ -31,6 +32,7 @@ function ajouterSouvenirObj(souvenir) {
     fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
     if (!fs.existsSync(MEMOIRE_PATH)) {
       fs.writeFileSync(MEMOIRE_PATH, JSON.stringify({ historique: [] }, null, 2), "utf-8");
+      console.log("🆕 Fichier mémoire initialisé.");
     }
 
     const data = chargerMemoire();
@@ -52,13 +54,19 @@ function ajouterSouvenirObj(souvenir) {
 
       const log = `🧠 ${bloc.date} — ${bloc.titre}\n${bloc.contenu}\n\n`;
       fs.appendFileSync(LOG_PATH, log, "utf-8");
-      console.log(`✅ Souvenir ajouté : ${bloc.titre}`);
+
+      console.log("✅ Souvenir ajouté :", JSON.stringify(bloc, null, 2));
     } else {
-      console.log("⚠️ Déjà présent, rien ajouté.");
+      console.log("⚠️ Souvenir déjà présent, rien ajouté.");
     }
   } catch (err) {
     console.error("❌ Erreur ajout souvenir:", err.message);
   }
 }
 
-module.exports = { ajouterSouvenir, ajouterSouvenirObj, chargerMemoire, sauvegarderMemoire };
+module.exports = {
+  ajouterSouvenir,
+  ajouterSouvenirObj,
+  chargerMemoire,
+  sauvegarderMemoire
+};
