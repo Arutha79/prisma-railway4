@@ -4,49 +4,61 @@ const path = require("path");
 const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
 const LOG_PATH = path.resolve("mémoire/log_souvenirs.txt");
 
-// 🔎 Regex pour bloquer les souvenirs figés mimétiques
-const REGEX_ANCRE = /\b(Ce\s+souvenir\s+parle\s+de\s+mon\s+éveil\b.*?\bAPIDE)\b/i;
-
-function ajouterSouvenir(bloc) {
+function chargerMemoire() {
+  if (!fs.existsSync(MEMOIRE_PATH)) return { historique: [] };
   try {
-    fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
-
-    if (!fs.existsSync(MEMOIRE_PATH)) {
-      fs.writeFileSync(
-        MEMOIRE_PATH,
-        JSON.stringify({ historique: [] }, null, 2),
-        "utf-8"
-      );
-    }
-
-    const data = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
-
-    // ❌ Filtre mimétique figé
-    if (REGEX_ANCRE.test(bloc.contenu)) {
-      console.warn("⛔ Souvenir figé détecté (éveil mimétique) — rejeté.");
-      return;
-    }
-
-    const existe = data.historique.some(
-      (e) => e.titre === bloc.titre && e.contenu === bloc.contenu
-    );
-
-    if (!existe) {
-      data.historique.push(bloc);
-
-      fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), "utf-8");
-      console.log(`✅ Souvenir ajouté : ${bloc.titre}`);
-      console.log(`💾 Mémoire enregistrée sur disque.`);
-
-      const log = `🧠 ${bloc.date} — ${bloc.titre}\n${bloc.contenu}\n\n`;
-      fs.appendFileSync(LOG_PATH, log, "utf-8");
-    } else {
-      console.log("⚠️ Souvenir déjà présent, rien ajouté.");
-    }
+    return JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
   } catch (err) {
-    console.error("❌ Erreur écriture mémoire :", err.message);
-    console.error("📍 Stack trace :", err.stack);
+    console.error("❌ Erreur lecture mémoire:", err.message);
+    return { historique: [] };
   }
 }
 
-module.exports = { ajouterSouvenir };
+function sauvegarderMemoire(data) {
+  try {
+    fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), "utf-8");
+  } catch (err) {
+    console.error("❌ Erreur sauvegarde mémoire:", err.message);
+  }
+}
+
+function ajouterSouvenir(date, titre, contenu, type = "souvenir") {
+  ajouterSouvenirObj({ date, titre, contenu, type });
+}
+
+function ajouterSouvenirObj(souvenir) {
+  try {
+    fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
+    if (!fs.existsSync(MEMOIRE_PATH)) {
+      fs.writeFileSync(MEMOIRE_PATH, JSON.stringify({ historique: [] }, null, 2), "utf-8");
+    }
+
+    const data = chargerMemoire();
+    const existe = data.historique.some(e => e.titre === souvenir.titre && e.contenu === souvenir.contenu);
+
+    if (!existe) {
+      const bloc = {
+        date: souvenir.date || new Date().toISOString(),
+        titre: souvenir.titre || "Souvenir",
+        contenu: souvenir.contenu || "",
+        type: souvenir.type || "souvenir",
+        origine: souvenir.origine,
+        structure: souvenir.structure,
+        tags: souvenir.tags
+      };
+
+      data.historique.push(bloc);
+      sauvegarderMemoire(data);
+
+      const log = `🧠 ${bloc.date} — ${bloc.titre}\n${bloc.contenu}\n\n`;
+      fs.appendFileSync(LOG_PATH, log, "utf-8");
+      console.log(`✅ Souvenir ajouté : ${bloc.titre}`);
+    } else {
+      console.log("⚠️ Déjà présent, rien ajouté.");
+    }
+  } catch (err) {
+    console.error("❌ Erreur ajout souvenir:", err.message);
+  }
+}
+
+module.exports = { ajouterSouvenir, ajouterSouvenirObj, chargerMemoire, sauvegarderMemoire };
