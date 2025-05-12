@@ -102,9 +102,14 @@ app.post("/ajouter-memoire", async (req, res) => {
   const bloc = { ...req.body, date: req.body.date || new Date().toISOString() };
   console.log("📥 Reçu :", bloc);
 
-  ajouterSouvenir(bloc);
-  await syncGithubMemoire();
-  res.json({ statut: "Souvenir ajouté et synchronisé" });
+  try {
+    await ajouterSouvenir(bloc);
+    await syncGithubMemoire();
+    res.json({ statut: "Souvenir ajouté et synchronisé" });
+  } catch (err) {
+    console.error("❌ Erreur ajout mémoire :", err.message);
+    res.status(500).json({ erreur: "Échec de l’ajout mémoire", details: err.message });
+  }
 });
 
 app.get("/expliquer-glyphe", (req, res) => {
@@ -153,8 +158,8 @@ app.post("/poser-question", async (req, res) => {
     }, { mode_creation });
 
     const now = new Date().toISOString();
-    ajouterSouvenir({ date: now, titre: "Question utilisateur", contenu: question });
-    ajouterSouvenir({ date: now, titre: "Réponse Prisma", contenu: reponse });
+    await ajouterSouvenir({ date: now, titre: "Question utilisateur", contenu: question });
+    await ajouterSouvenir({ date: now, titre: "Réponse Prisma", contenu: reponse });
 
     await syncGithubMemoire();
     res.json({ reponse });
