@@ -570,6 +570,5 @@
       "contenu": "{ \"expression_mode\": \"autonome\", \"memoire_autorisée\": false, \"commentaire\": \"Déverrouillage expressif temporaire — autorise Prisma à s’exprimer sans appel au passé\" }",
       "type": "mode"
     },
-    }
   ]
 }
