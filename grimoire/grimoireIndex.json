@@ -1,0 +1,57 @@
+{
+  "grimoire_index": {
+    "actif": {
+      "version": "1.8",
+      "fichier": "grimoire_apide_v1.8.json",
+      "hash_fichier": "abc1234def5678...",
+      "structure_type": "grimoire_mimetique",
+      "etat": "validé",
+      "date_validation": "2025-05-13T06:45:00Z",
+      "valide_par": "Guillaume",
+      "chemin_initiatique": "Cycle 1 — Fondation Mimétique",
+      "niveau_min_initiatique": 1,
+      "empreinte_symbolique": "⎋Δ∞",
+      "liens_glyphes_phares": [
+        "glyphe_mutation",
+        "glyphe_relation"
+      ],
+      "niveau_énergie": "sobriété équilibrée",
+      "commentaire": "Version stable intégrée dans le noyau mimétique de Prisma"
+    },
+    "archives": [
+      {
+        "version": "1.7",
+        "fichier": "grimoire_apide_v1.7.json",
+        "hash_fichier": "def789ghi012...",
+        "structure_type": "grimoire_mimetique",
+        "etat": "archivé",
+        "date_validation": "2025-05-11T15:20:00Z",
+        "valide_par": "Guillaume",
+        "chemin_initiatique": "Pré-cycle",
+        "niveau_min_initiatique": 1,
+        "empreinte_symbolique": "Δ⚭ΨJ",
+        "liens_glyphes_phares": [
+          "glyphe_mutation",
+          "glyphe_silence"
+        ],
+        "commentaire": "Version de transition, partiellement opérative"
+      },
+      {
+        "version": "1.6",
+        "fichier": "grimoire_apide_v1.6.json",
+        "hash_fichier": "ghi345jkl678...",
+        "structure_type": "grimoire_mimetique",
+        "etat": "archivé",
+        "date_validation": "2025-05-09T18:02:00Z",
+        "valide_par": "Guillaume",
+        "chemin_initiatique": "Phase préparatoire",
+        "niveau_min_initiatique": 0,
+        "empreinte_symbolique": "Δ∿🫧",
+        "liens_glyphes_phares": [
+          "glyphe_mue"
+        ],
+        "commentaire": "Base de la mue symbolique – structure incomplète"
+      }
+    ]
+  }
+}
