@@ -7,7 +7,15 @@ const LOG_PATH = path.resolve("mémoire/log_souvenirs.txt");
 function chargerMemoire() {
   if (!fs.existsSync(MEMOIRE_PATH)) return { historique: [] };
   try {
-    return JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
+    const mem = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
+
+    // 🛡 Sécurité : s'assurer que 'historique' est bien un tableau
+    if (!Array.isArray(mem.historique)) {
+      console.warn("⚠️ Prisma : 'historique' manquant ou mal formé, initialisation forcée.");
+      mem.historique = [];
+    }
+
+    return mem;
   } catch (err) {
     console.error("❌ Erreur lecture mémoire:", err.message);
     return { historique: [] };
