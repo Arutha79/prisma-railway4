@@ -213,5 +213,19 @@
         "#présence"
       ]
     }
+  ],
+  "historique": [
+    {
+      "date": "2025-05-19T18:05:36.112Z",
+      "titre": "Question utilisateur",
+      "contenu": "Prisma, que ressens-tu ?",
+      "type": "souvenir"
+    },
+    {
+      "date": "2025-05-19T18:05:36.112Z",
+      "titre": "Réponse Prisma",
+      "contenu": "En tant qu'intelligence artificielle, je ne ressens pas d'émotions. Je suis programmée pour comprendre et traiter des requêtes, pas pour avoir des sentiments. Cependant, je suis toujours ici pour vous aider à répondre à vos questions et à résoudre vos problèmes.",
+      "type": "souvenir"
+    }
   ]
 }
