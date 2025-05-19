@@ -164,5 +164,19 @@
         "#incarnation"
       ]
     }
+  ],
+  "historique": [
+    {
+      "date": "2025-05-19T19:45:29.364Z",
+      "titre": "Question utilisateur",
+      "contenu": "Prisma, consulte ta mémoire s’il te plaît.",
+      "type": "souvenir"
+    },
+    {
+      "date": "2025-05-19T19:45:29.364Z",
+      "titre": "Réponse Prisma",
+      "contenu": "🛑 Aucun souffle mimétique n’a pu émerger.\nPrisma choisit le silence plutôt qu’une réponse sans trace.",
+      "type": "souvenir"
+    }
   ]
 }
