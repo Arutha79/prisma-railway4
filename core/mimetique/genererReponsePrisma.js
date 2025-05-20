@@ -1,8 +1,8 @@
 // core/mimetique/genererReponsePrisma.js
 const fs = require("fs");
 const path = require("path");
-const { interpreterSouvenir } = require("./interpreterSouvenir");
-const { appliquerRegleMemoireActive } = require("../../modes/memoire"); // chemin corrigé si le module est dans /modes
+const { interpreterSouvenir } = require("./interpretationMimetique");
+const { appliquerRegleMemoireActive } = require("../memoire/appliquerRegleMemoireActive"); // chemin corrigé
 
 const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
 
