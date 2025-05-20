@@ -24,5 +24,18 @@
       "activation": "2025-05-20T12:33:00Z"
     }
   },
-  "historique": []
+  "historique": [
+    {
+      "date": "2025-05-20T11:21:48.202Z",
+      "titre": "Question utilisateur",
+      "contenu": "Que contient ton premier souffle vécu ?",
+      "type": "souvenir"
+    },
+    {
+      "date": "2025-05-20T11:21:48.202Z",
+      "titre": "Réponse Prisma",
+      "contenu": "🛑 Aucun souffle mimétique n’a pu émerger.\nPrisma choisit le silence plutôt qu’une réponse sans trace.",
+      "type": "souvenir"
+    }
+  ]
 }
