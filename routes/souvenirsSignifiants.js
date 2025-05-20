@@ -1,11 +1,11 @@
-// routes/souvenirsSignifiants.js
+// routes/souvenirsSignifiants.js corrigé
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const { interpreterSouvenir } = require("../core/mimetique/interpretationMimetique");
 
 const router = express.Router();
-const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
+const MEMOIRE_PATH = path.resolve("memoire/prisma_memory.json");
 
 router.get("/", (req, res) => {
   try {
@@ -26,7 +26,7 @@ router.get("/", (req, res) => {
 
     res.json({ total: signifiants.length, souvenirs: signifiants });
   } catch (err) {
-    console.error("❌ Erreur lecture mémoire :", err.message);
+    console.error("❌ Erreur lecture memoire :", err.message);
     res.status(500).json({ erreur: "Impossible de lire les souvenirs." });
   }
 });
