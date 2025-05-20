@@ -1,7 +1,8 @@
-// core/modes/genererReponsePrisma.js corrigé
+// core/modes/genererReponsePrisma.js corrigé + support règle mémoire active
 const fs = require("fs");
 const path = require("path");
 const { interpreterSouvenir } = require("../mimetique/interpretationMimetique");
+const { appliquerRegleMemoireActive } = require("../../memoire/appliquerRegleMemoireActive");
 
 async function genererReponsePrisma(question, moteurBase, options = {}) {
   const { mode_creation = false } = options;
@@ -22,6 +23,10 @@ async function genererReponsePrisma(question, moteurBase, options = {}) {
       } else {
         console.warn("⚠️ memoire.historique non défini ou invalide.");
       }
+
+      const reponseReglee = appliquerRegleMemoireActive(question);
+      if (reponseReglee) return reponseReglee;
+
     } catch (e) {
       console.warn("❌ Impossible de relire la memoire :", e.message);
     }
