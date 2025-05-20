@@ -1,7 +1,10 @@
+// ✅ Corrections appliquées à tous les fichiers JS (mémoire ➜ memoire)
+
+// ajouterMemoireFichier.js
 const fs = require("fs");
 const path = require("path");
 
-const MEMORY_DIR = path.resolve("mémoire");
+const MEMORY_DIR = path.resolve("memoire");
 const MEMORY_FILE = path.join(MEMORY_DIR, "prisma_memory.json");
 const LOG_FILE = path.join(MEMORY_DIR, "log_souvenirs.txt");
 
@@ -9,7 +12,7 @@ function ajouterMemoireEnrichi(data) {
   try {
     if (!fs.existsSync(MEMORY_DIR)) {
       fs.mkdirSync(MEMORY_DIR, { recursive: true });
-      console.log("📁 Dossier mémoire créé.");
+      console.log("📁 Dossier memoire créé.");
     }
 
     let mémoire = { historique: [] };
@@ -18,10 +21,9 @@ function ajouterMemoireEnrichi(data) {
       const contenuExistant = fs.readFileSync(MEMORY_FILE, "utf-8");
       mémoire = JSON.parse(contenuExistant);
     } else {
-      console.log("📄 Fichier mémoire initialisé.");
+      console.log("📄 Fichier memoire initialisé.");
     }
 
-    // Check duplication (based on titre + contenu)
     const existe = mémoire.historique.some(
       (e) => e.titre === data.titre && e.contenu === data.contenu
     );
@@ -40,7 +42,7 @@ function ajouterMemoireEnrichi(data) {
       console.log("⚠️ Souvenir déjà existant. Non réécrit.");
     }
   } catch (err) {
-    console.error("❌ Erreur ajout mémoire enrichie :", err.message);
+    console.error("❌ Erreur ajout memoire enrichie :", err.message);
   }
 }
 
