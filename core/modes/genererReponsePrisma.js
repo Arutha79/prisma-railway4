@@ -1,4 +1,4 @@
-// core/modes/genererReponsePrisma.js
+// core/modes/genererReponsePrisma.js corrigé
 const fs = require("fs");
 const path = require("path");
 const { interpreterSouvenir } = require("../mimetique/interpretationMimetique");
