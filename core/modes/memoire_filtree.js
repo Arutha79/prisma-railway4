@@ -1,30 +1,93 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-const PRIMARY_MEMORY = path.resolve('mémoire/prisma_memory.json');
+const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
+const LOG_PATH = path.resolve("mémoire/log_souvenirs.txt");
 
-function filtrerMemoireParSujet(sujet = '', options = {}) {
-  const { parType = [], limite = 50 } = options;
+function chargerMemoire() {
+  if (!fs.existsSync(MEMOIRE_PATH)) return { historique: [] };
   try {
-    const raw = fs.readFileSync(PRIMARY_MEMORY, 'utf-8');
-    const data = JSON.parse(raw);
-    if (!Array.isArray(data.historique)) return [];
-
-    return data.historique
-      .filter(item => {
-        const correspond = sujet
-          ? (item.titre + item.contenu).toLowerCase().includes(sujet.toLowerCase())
-          : true;
-        const typeMatch = parType.length > 0 ? parType.includes(item.type) : true;
-        return correspond && typeMatch;
-      })
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, limite);
-
+    const mem = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
+    if (!Array.isArray(mem.historique)) {
+      console.warn("⚠️ Prisma : 'historique' manquant ou mal formé, initialisation forcée.");
+      mem.historique = [];
+    }
+    return mem;
   } catch (err) {
-    console.error('❌ Erreur de lecture mémoire filtrée:', err);
-    return [];
+    console.error("❌ Erreur lecture mémoire:", err.message);
+    return { historique: [] };
   }
 }
 
-module.exports = { filtrerMemoireParSujet };
+function sauvegarderMemoire(data) {
+  try {
+    fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), "utf-8");
+  } catch (err) {
+    console.error("❌ Erreur sauvegarde mémoire:", err.message);
+  }
+}
+
+async function ajouterSouvenir(souvenir) {
+  try {
+    fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
+    if (!fs.existsSync(MEMOIRE_PATH)) {
+      fs.writeFileSync(MEMOIRE_PATH, JSON.stringify({ historique: [] }, null, 2), "utf-8");
+      console.log("🆕 Fichier mémoire initialisé.");
+    }
+
+    const data = chargerMemoire();
+    if (!Array.isArray(data.historique)) {
+      console.warn("⚠️ 'historique' absent ou non tableau, initialisation forcée.");
+      data.historique = [];
+    }
+
+    const existe = data.historique.some(e =>
+      e.titre === souvenir.titre && e.contenu === souvenir.contenu
+    );
+
+    if (!existe) {
+      const bloc = {
+        date: souvenir.date || new Date().toISOString(),
+        titre: souvenir.titre || "Souvenir",
+        contenu: souvenir.contenu || "",
+        type: souvenir.type || "souvenir",
+        origine: souvenir.origine,
+        structure: souvenir.structure,
+        tags: souvenir.tags
+      };
+
+      data.historique.push(bloc);
+      sauvegarderMemoire(data);
+
+      const log = `🧠 ${bloc.date} — ${bloc.titre}\n${bloc.contenu}\n\n`;
+      fs.appendFileSync(LOG_PATH, log, "utf-8");
+
+      console.log("✅ Souvenir ajouté :", JSON.stringify(bloc, null, 2));
+    } else {
+      console.log("⚠️ Souvenir déjà présent, rien ajouté.");
+    }
+  } catch (err) {
+    console.error("❌ Erreur ajout souvenir:", err.message);
+  }
+}
+
+function appliquerRegleMemoireActive(question) {
+  const data = chargerMemoire();
+  const regle = data.prisma_memory && data.prisma_memory.règle_mémoire_active;
+
+  if (regle && question.toLowerCase().includes("premier souffle")) {
+    console.log("🎯 Règle mémoire active détectée :", regle.nom);
+    console.log("📌 Réponse appliquée :", regle.action);
+    return regle.action;
+  }
+
+  return null;
+}
+
+module.exports = {
+  ajouterSouvenir,
+  ajouterSouvenirObj: ajouterSouvenir,
+  chargerMemoire,
+  sauvegarderMemoire,
+  appliquerRegleMemoireActive
+};
