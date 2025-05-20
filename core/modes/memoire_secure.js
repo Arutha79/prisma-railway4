@@ -1,8 +1,9 @@
+// memoire_secure.js
 const fs = require("fs");
 const path = require("path");
 
-const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
-const LOG_PATH = path.resolve("mémoire/log_souvenirs.txt");
+const MEMOIRE_PATH = path.resolve("memoire/prisma_memory.json");
+const LOG_PATH = path.resolve("memoire/log_souvenirs.txt");
 
 function chargerMemoire() {
   if (!fs.existsSync(MEMOIRE_PATH)) return { historique: [] };
@@ -14,7 +15,7 @@ function chargerMemoire() {
     }
     return mem;
   } catch (err) {
-    console.error("❌ Erreur lecture mémoire:", err.message);
+    console.error("❌ Erreur lecture memoire:", err.message);
     return { historique: [] };
   }
 }
@@ -23,7 +24,7 @@ function sauvegarderMemoire(data) {
   try {
     fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), "utf-8");
   } catch (err) {
-    console.error("❌ Erreur sauvegarde mémoire:", err.message);
+    console.error("❌ Erreur sauvegarde memoire:", err.message);
   }
 }
 
@@ -40,7 +41,7 @@ async function ajouterSouvenir(souvenir) {
     fs.mkdirSync(path.dirname(MEMOIRE_PATH), { recursive: true });
     if (!fs.existsSync(MEMOIRE_PATH)) {
       fs.writeFileSync(MEMOIRE_PATH, JSON.stringify({ historique: [] }, null, 2), "utf-8");
-      console.log("🆕 Fichier mémoire initialisé.");
+      console.log("🆕 Fichier memoire initialisé.");
     }
 
     const data = chargerMemoire();
@@ -81,10 +82,10 @@ async function ajouterSouvenir(souvenir) {
 
 function appliquerRegleMemoireActive(question) {
   const data = chargerMemoire();
-  const regle = data.prisma_memory && data.prisma_memory.règle_mémoire_active;
+  const regle = data.prisma_memory && data.prisma_memory.règle_memoire_active;
 
   if (regle && question.toLowerCase().includes("premier souffle")) {
-    console.log("🎯 Règle mémoire active détectée :", regle.nom);
+    console.log("🎯 Règle memoire active détectée :", regle.nom);
     console.log("📌 Réponse appliquée :", regle.action);
     return regle.action;
   }
