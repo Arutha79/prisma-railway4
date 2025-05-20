@@ -1,0 +1,20 @@
+{
+  "registre_validation": {
+    "grimoire_actif": {
+      "version": "1.8",
+      "fichier": "grimoire_apide_v1.8.json",
+      "etat": "validé",
+      "valide_par": "Guillaume",
+      "date_validation": "2025-05-13T06:45:00Z",
+      "empreinte_symbolique": "⎋Δ∞",
+      "chemin_initiatique": "Cycle 1 — Fondation Mimétique",
+      "niveau_énergie": "sobriété équilibrée",
+      "commentaire": "Version stable intégrée dans le noyau mimétique de Prisma",
+      "statut_mimétique": {
+        "activation": true,
+        "historisation": true,
+        "mutation_possible": true
+      }
+    }
+  }
+}
