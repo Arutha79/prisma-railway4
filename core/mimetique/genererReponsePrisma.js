@@ -1,10 +1,10 @@
-// core/mimetique/genererReponsePrisma.js
+// core/mimetique/genererReponsePrisma.js corrigé
 const fs = require("fs");
 const path = require("path");
 const { interpreterSouvenir } = require("./interpretationMimetique");
 const { appliquerRegleMemoireActive } = require("../memoire/appliquerRegleMemoireActive"); // chemin corrigé
 
-const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
+const MEMOIRE_PATH = path.resolve("memoire/prisma_memory.json");
 
 async function genererReponsePrisma(question, moteurBase, options = {}) {
   const { mode_creation = false } = options;
@@ -38,8 +38,8 @@ async function genererReponsePrisma(question, moteurBase, options = {}) {
     return interpretationTrouvee;
 
   } catch (e) {
-    console.warn("❌ Impossible de relire la mémoire :", e.message);
-    return "⚠️ Erreur d’accès à la mémoire de Prisma.";
+    console.warn("❌ Impossible de relire la memoire :", e.message);
+    return "⚠️ Erreur d’accès à la memoire de Prisma.";
   }
 }
 
