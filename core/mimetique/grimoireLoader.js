@@ -1,10 +1,10 @@
-// grimoireLoader.js
+// grimoireLoader.js corrigé
 // Charge le grimoire mimétique actif à partir du registre de validation
 
 const fs = require("fs");
 const path = require("path");
 
-const registrePath = path.resolve(__dirname, "../mémoire/registreValidationMimétique.json");
+const registrePath = path.resolve(__dirname, "../memoire/registreValidationMimétique.json");
 
 function chargerGrimoireActif() {
   if (!fs.existsSync(registrePath)) {
@@ -34,7 +34,7 @@ function chargerGrimoireActif() {
     return null;
   }
 
-  const grimoirePath = path.resolve(__dirname, `../mémoire/${fichierNom}`);
+  const grimoirePath = path.resolve(__dirname, `../memoire/${fichierNom}`);
   if (!fs.existsSync(grimoirePath)) {
     console.error("❌ Fichier grimoire introuvable :", grimoirePath);
     return null;
