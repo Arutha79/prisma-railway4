@@ -1,7 +1,8 @@
+// auto_evaluation.js corrigé
 const fs = require("fs");
 const path = require("path");
 
-const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
+const MEMOIRE_PATH = path.resolve("memoire/prisma_memory.json");
 
 function autoEvaluerMemoire() {
   const resultat = {
