@@ -2,7 +2,7 @@
 const fs = require("fs");
 const path = require("path");
 const { interpreterSouvenir } = require("./interpretationMimetique");
-// const { appliquerMirrorActIfLoopDetected } = require("./Z.MIRROR_ACT"); // à activer si module prêt
+const { appliquerRegleMemoireActive } = require("../../memoire"); // adapte le chemin selon ta structure
 
 const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
 
@@ -14,6 +14,7 @@ async function genererReponsePrisma(question, moteurBase, options = {}) {
   try {
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
 
+    // 1. Chercher un souvenir interprétable
     for (const bloc of memoire.historique.slice().reverse()) {
       const interpretation = interpreterSouvenir(bloc, { mode_creation });
       if (interpretation) {
@@ -25,19 +26,21 @@ async function genererReponsePrisma(question, moteurBase, options = {}) {
       }
     }
 
-    // Appliquer Z.MIRROR_ACT ici si nécessaire :
-    // interpretationTrouvee = appliquerMirrorActIfLoopDetected(interpretationTrouvee) || interpretationTrouvee;
+    // 2. Si aucune interprétation, appliquer la règle mémoire active
+    if (!interpretationTrouvee) {
+      const reponseReglee = appliquerRegleMemoireActive(question);
+      if (reponseReglee) return reponseReglee;
+
+      // 3. Sinon, réponse neutre
+      return "… (Prisma n’a trouvé aucun souvenir à interpréter pour répondre avec justesse.)";
+    }
+
+    return interpretationTrouvee;
 
   } catch (e) {
     console.warn("❌ Impossible de relire la mémoire :", e.message);
+    return "⚠️ Erreur d’accès à la mémoire de Prisma.";
   }
-
-  if (interpretationTrouvee) {
-    return interpretationTrouvee;
-  }
-
-  // Si aucune interprétation mimétique n'est disponible
-  return "🛑 Aucun souffle mimétique n’a pu émerger.\nPrisma choisit le silence plutôt qu’une réponse sans trace.";
 }
 
 module.exports = { genererReponsePrisma };
