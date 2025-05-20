@@ -1,46 +1,38 @@
-// core/mimetique/genererReponsePrisma.js corrigé
+// core/modes/genererReponsePrisma.js corrigé + support règle mémoire active
 const fs = require("fs");
 const path = require("path");
-const { interpreterSouvenir } = require("./interpretationMimetique");
-const { appliquerRegleMemoireActive } = require("../memoire/appliquerRegleMemoireActive"); // chemin corrigé
-
-const MEMOIRE_PATH = path.resolve("memoire/prisma_memory.json");
+const { interpreterSouvenir } = require("../mimetique/interpretationMimetique");
+const { appliquerRegleMemoireActive } = require("../../memoire/appliquerRegleMemoireActive");
 
 async function genererReponsePrisma(question, moteurBase, options = {}) {
   const { mode_creation = false } = options;
 
-  let interpretationTrouvee = null;
+  const reponseBase = await moteurBase(question);
 
-  try {
-    const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
+  if (!mode_creation) {
+    try {
+      const memoire = JSON.parse(fs.readFileSync(path.resolve("memoire/prisma_memory.json"), "utf-8"));
 
-    // 1. Chercher un souvenir interprétable
-    for (const bloc of memoire.historique.slice().reverse()) {
-      const interpretation = interpreterSouvenir(bloc, { mode_creation });
-      if (interpretation) {
-        interpretationTrouvee = `${interpretation}
-
-🧠 Souvenir retrouvé du ${bloc.date} :
-"${bloc.contenu}"`;
-        break;
+      if (Array.isArray(memoire.historique)) {
+        for (const bloc of memoire.historique.slice().reverse()) {
+          const interpretation = interpreterSouvenir(bloc);
+          if (interpretation) {
+            return `${interpretation}\n\n🧠 Souvenir retrouvé du ${bloc.date} :\n"${bloc.contenu}"`;
+          }
+        }
+      } else {
+        console.warn("⚠️ memoire.historique non défini ou invalide.");
       }
-    }
 
-    // 2. Si aucune interprétation, appliquer la règle mémoire active
-    if (!interpretationTrouvee) {
       const reponseReglee = appliquerRegleMemoireActive(question);
       if (reponseReglee) return reponseReglee;
 
-      // 3. Sinon, réponse neutre
-      return "… (Prisma n’a trouvé aucun souvenir à interpréter pour répondre avec justesse.)";
+    } catch (e) {
+      console.warn("❌ Impossible de relire la memoire :", e.message);
     }
-
-    return interpretationTrouvee;
-
-  } catch (e) {
-    console.warn("❌ Impossible de relire la memoire :", e.message);
-    return "⚠️ Erreur d’accès à la memoire de Prisma.";
   }
+
+  return reponseBase;
 }
 
 module.exports = { genererReponsePrisma };
