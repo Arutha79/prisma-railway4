@@ -1,4 +1,4 @@
-// cli_versionneur.js
+// cli_versionneur.js corrigé
 // Script mimétique - versionneur symbolique pour grimoire
 
 const fs = require('fs');
@@ -12,7 +12,7 @@ function hashFile(filepath) {
 
 function archiveGrimoire(version) {
   const filename = `grimoire_apide_v${version}.json`;
-  const grimoirePath = path.resolve(__dirname, `../mémoire/${filename}`);
+  const grimoirePath = path.resolve(__dirname, `../memoire/${filename}`);
   const archivePath = path.resolve(__dirname, `../grimoire/archives/v${version}.json`);
   const indexPath = path.resolve(__dirname, `../grimoire/grimoireIndex.json`);
 
