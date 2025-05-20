@@ -10,7 +10,7 @@ async function genererReponsePrisma(question, moteurBase, options = {}) {
 
   if (!mode_creation) {
     try {
-      const memoire = JSON.parse(fs.readFileSync(path.resolve("mémoire/prisma_memory.json"), "utf-8"));
+      const memoire = JSON.parse(fs.readFileSync(path.resolve("memoire/prisma_memory.json"), "utf-8"));
 
       if (Array.isArray(memoire.historique)) {
         for (const bloc of memoire.historique.slice().reverse()) {
@@ -20,10 +20,10 @@ async function genererReponsePrisma(question, moteurBase, options = {}) {
           }
         }
       } else {
-        console.warn("⚠️ Mémoire.historique non défini ou invalide.");
+        console.warn("⚠️ memoire.historique non défini ou invalide.");
       }
     } catch (e) {
-      console.warn("❌ Impossible de relire la mémoire :", e.message);
+      console.warn("❌ Impossible de relire la memoire :", e.message);
     }
   }
 
