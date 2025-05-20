@@ -1,4 +1,4 @@
-// mémoire/appliquerRegleMemoireActive.js
+// memoire/appliquerRegleMemoireActive.js
 
 function appliquerRegleMemoireActive(historique = [], options = {}) {
   const { inclure_blocages = false, recent_only = false } = options;
