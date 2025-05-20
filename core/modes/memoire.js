@@ -8,13 +8,10 @@ function chargerMemoire() {
   if (!fs.existsSync(MEMOIRE_PATH)) return { historique: [] };
   try {
     const mem = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
-
-    // 🛡 Sécurité : s'assurer que 'historique' est bien un tableau
     if (!Array.isArray(mem.historique)) {
       console.warn("⚠️ Prisma : 'historique' manquant ou mal formé, initialisation forcée.");
       mem.historique = [];
     }
-
     return mem;
   } catch (err) {
     console.error("❌ Erreur lecture mémoire:", err.message);
@@ -39,7 +36,6 @@ async function ajouterSouvenir(souvenir) {
     }
 
     const data = chargerMemoire();
-
     if (!Array.isArray(data.historique)) {
       console.warn("⚠️ 'historique' absent ou non tableau, initialisation forcée.");
       data.historique = [];
@@ -75,12 +71,23 @@ async function ajouterSouvenir(souvenir) {
   }
 }
 
-// Compatibilité historique
-const ajouterSouvenirObj = ajouterSouvenir;
+function appliquerRegleMemoireActive(question) {
+  const data = chargerMemoire();
+  const regle = data.prisma_memory && data.prisma_memory.règle_mémoire_active;
+
+  if (regle && question.toLowerCase().includes("premier souffle")) {
+    console.log("🎯 Règle mémoire active détectée :", regle.nom);
+    console.log("📌 Réponse appliquée :", regle.action);
+    return regle.action;
+  }
+
+  return null;
+}
 
 module.exports = {
   ajouterSouvenir,
-  ajouterSouvenirObj,
+  ajouterSouvenirObj: ajouterSouvenir,
   chargerMemoire,
-  sauvegarderMemoire
+  sauvegarderMemoire,
+  appliquerRegleMemoireActive
 };
