@@ -1,4 +1,4 @@
-
+// server.js corrigé
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -18,7 +18,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const MEMOIRE_PATH = path.resolve("mémoire/prisma_memory.json");
+const MEMOIRE_PATH = path.resolve("memoire/prisma_memory.json");
 const ETAT_PATH = path.resolve("core/mimetique/etatPrisma.json");
 const GITHUB_REPO = "Arutha79/prisma-railway4";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -45,7 +45,7 @@ async function syncGithubMemoire() {
     const content = fs.readFileSync(MEMOIRE_PATH, "utf-8");
     const base64 = Buffer.from(content).toString("base64");
 
-    const meta = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/mémoire/prisma_memory.json`, {
+    const meta = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/memoire/prisma_memory.json`, {
       headers: { Authorization: `Bearer ${GITHUB_TOKEN}` }
     });
 
@@ -58,7 +58,7 @@ async function syncGithubMemoire() {
     const metaJson = await meta.json();
     const sha = metaJson.sha;
 
-    const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/mémoire/prisma_memory.json`, {
+    const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/memoire/prisma_memory.json`, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${GITHUB_TOKEN}`,
