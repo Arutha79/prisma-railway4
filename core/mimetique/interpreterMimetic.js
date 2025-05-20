@@ -1,6 +1,6 @@
-// interpreterMimetic.js
+// interpreterMimetic.js corrigé
 // Version enrichie — APIDE v1.3 — 2025-05-13
-const grimoire = require('../mémoire/grimoire_apide.json');
+const grimoire = require('../memoire/grimoire_apide.json');
 
 function interpreterGlyphe(input) {
   const item = grimoire.structure.find(el =>
@@ -36,7 +36,6 @@ function filtrerParNiveauInitiatique(glyphe, niveauActuel = 1) {
 }
 
 function trouverAssociations(semantic_key) {
-  // Exemple basique — à enrichir selon les réseaux de glyphes
   return grimoire.structure
     .filter(el => el.tags?.includes(semantic_key))
     .map(el => el.nom || el.id);
