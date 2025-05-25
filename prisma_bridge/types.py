@@ -8,3 +8,4 @@ class ApideIntent:
     target: Optional[str]
     condition: Optional[str]
     effect: str
+    agent_target: Optional[str] = None
