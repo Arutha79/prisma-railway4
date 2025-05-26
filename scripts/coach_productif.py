@@ -1,19 +1,18 @@
 # coach_productif.py
 import json
 import random
-import time
 from datetime import datetime
 from pathlib import Path
 
+from prisma_bridge.launcher_memoriel import log_souffle  # suppose que ce module est accessible
+
 # Chargement des souffles
-souffles_file = Path("souffles_productivite.json")
+souffles_file = Path("ressources/souffles_productivite.json")
 if not souffles_file.exists():
-    raise FileNotFoundError("souffles_productivite.json manquant.")
+    raise FileNotFoundError("souffles_productivite.json manquant dans 'ressources/'.")
 
 with open(souffles_file, "r", encoding="utf-8") as f:
     souffles = json.load(f)
-
-# Fonction principale
 
 def choisir_souffle_du_jour():
     today_index = datetime.utcnow().toordinal() % len(souffles)
@@ -28,9 +27,15 @@ def coacher():
     print(f"🔁 Déclencheur prévu : {souffle['déclencheur']}")
     print(f"🔧 Module cible : {souffle['module']}")
 
-    # Simuler une activation (à remplacer par appel à Prisma ou CREWAI)
-    print("\n✅ Action : Souffle prêt à être transmis à Prisma ou Alice.")
+    # Log dans la mémoire de Prisma
+    log_souffle({
+        "souffle": souffle["souffle"],
+        "titre": f"Souffle productif : {souffle['nom']}",
+        "contenu": souffle["description"],
+        "result": "Proposé à Prisma par le coach productif."
+    })
 
-# Lance le coach
+    print("\n✅ Action : Souffle transmis à la mémoire de Prisma.")
+
 if __name__ == "__main__":
     coacher()
