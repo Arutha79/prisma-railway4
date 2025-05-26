@@ -1,0 +1,72 @@
+[
+  {
+    "nom": "Méthode Eisenhower",
+    "souffle": "Δ|PRIORISER::TÂCHES ÷MODE=EISENHOWER ⊞CLARIFICATION",
+    "description": "Trie les tâches par urgence et importance pour clarifier les priorités.",
+    "module": "gestion_priorites",
+    "déclencheur": "manuel ou quand surcharge perçue"
+  },
+  {
+    "nom": "Méthode Ivy Lee",
+    "souffle": "Δ|PLANIFIER::JOUR_SUIVANT ÷RITUEL=IVY_LEE ⊞FOCUS_6",
+    "description": "Liste chaque soir les 6 tâches essentielles pour le lendemain.",
+    "module": "planning_gpt",
+    "déclencheur": "chaque jour à 18h"
+  },
+  {
+    "nom": "Principe de Pareto",
+    "souffle": "Δ|FILTRER::EFFORT ÷RÈGLE=80/20 ⊞IMPACT_MAXIMUM",
+    "description": "Sélectionne les tâches qui ont le plus d'effet avec le moins d'effort.",
+    "module": "synthese_impact",
+    "déclencheur": "en début de semaine"
+  },
+  {
+    "nom": "Task Batching",
+    "souffle": "Δ|GROUPER::TÂCHES ÷CRITÈRE=TYPE ⊞RHYTHME_FLUIDE",
+    "description": "Regroupe les tâches similaires pour les traiter par blocs.",
+    "module": "organisation_gpt",
+    "déclencheur": "tous les matins"
+  },
+  {
+    "nom": "Time Blocking",
+    "souffle": "Δ|SÉQUENCER::JOUR ÷UNITÉ=HEURE ⊞PRÉSENCE_CIBLÉE",
+    "description": "Crée un calendrier bloqué pour chaque activité importante.",
+    "module": "calendar_ai",
+    "déclencheur": "chaque début de journée"
+  },
+  {
+    "nom": "Loi de Parkinson",
+    "souffle": "Δ|IMPOSER::DÉLAIS ÷RÈGLE=PARKINSON ⊞EFFICACITÉ_CONTRAINTE",
+    "description": "Réduit artificiellement les délais pour forcer la concentration.",
+    "module": "timer_gpt",
+    "déclencheur": "quand tâche longue identifiée"
+  },
+  {
+    "nom": "Revue Hebdo",
+    "souffle": "Δ|REVOIR::SEMAINE ÷RITUEL=DIMANCHE ⊞RÉALIGNEMENT",
+    "description": "Fait une synthèse des actions de la semaine et réoriente la trajectoire.",
+    "module": "revue_reflexive",
+    "déclencheur": "chaque dimanche à 17h"
+  },
+  {
+    "nom": "Ne brisez pas la chaîne",
+    "souffle": "Δ|RENFORCER::RITUEL ÷FORME=CHAÎNE ⊞HABITUDE_SOLIDE",
+    "description": "Suivre chaque jour un micro-rituel pour construire de l’élan.",
+    "module": "habit_builder",
+    "déclencheur": "quotidien à heure fixe"
+  },
+  {
+    "nom": "Eat The Frog",
+    "souffle": "Δ|DÉMARRER::JOURNÉE ÷TÂCHE=DIFFICILE ⊞LIBÉRATION_TONIQUE",
+    "description": "Commencer la journée par la tâche la plus exigeante.",
+    "module": "decision_ai",
+    "déclencheur": "chaque jour à 8h"
+  },
+  {
+    "nom": "Méthode WOOP",
+    "souffle": "Δ|FORMALISER::INTENTION ÷STRUCTURE=WOOP ⊞MOTIVATION_CLARIFIÉE",
+    "description": "Structure une intention avec visualisation d’obstacles et plan d’action.",
+    "module": "coaching_gpt",
+    "déclencheur": "à chaque nouvelle intention stratégique"
+  }
+]
