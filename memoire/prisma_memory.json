@@ -1101,6 +1101,12 @@
       "titre": "Référence stratégique : Carte des concepts clés de l’IA pour Prisma",
       "contenu": "Guillaume a validé l’usage de l’infographie « Les concepts clés de l’IA » (Brij Kishore Pandey & Tody Rafalimanana) comme repère stratégique pour Prisma. Cette carte synthétise les domaines essentiels liés à la conception d’agents intelligents (LLM, RAG, Agent IA, Agentique IA).\n\nElle est utilisée comme support :\n- pour valider notre vocabulaire et nos briques architecturales (ex. ReAct, décomposition de tâche, mémoire vectorielle, orchestration multi-agents, etc.)\n- comme checklist évolutive pour évaluer la couverture des capacités de Prisma\n- comme figure de documentation (README, présentations internes)\n\nÀ intégrer dans les supports de référence du projet Prisma comme boussole conceptuelle vivante.",
       "type": "souvenir"
+    },
+    {
+      "date": "2025-06-06",
+      "titre": "Synthèse validée des dépôts Rasa et Botpress pour Prisma (mis à jour)",
+      "contenu": "Guillaume a validé une synthèse des deux dépôts Rasa et Botpress comme base d’intégration ou d’inspiration pour Prisma.\n\n1. À RETENIR :\n- Actions personnalisées (Python pour Rasa, JS pour Botpress) comme passerelles vers Alice/Prisma.\n- Botpress comme interface frontale conversationnelle, avec connecteurs externes (Web, Slack, Messenger).\n- Logique de flows / scénarios (stories, triggers) pour encadrer des parcours semi-guidés (ex : onboarding).\n- Slots / sessions locales pour un tampon contextuel léger avant appel à Alice.\n\n2. À ÉCARTER :\n- Les moteurs NLU embarqués des deux systèmes (intents/entities), redondants avec GPT.\n- La logique trop codifiée côté client : Prisma prendra en charge les décisions complexes.\n- La persistance mémoire locale (fichiers, stockage interne), car Prisma a une mémoire centralisée/vectorielle.\n\n3. Usage projeté :\n- Rasa et Botpress peuvent servir de clients/agents connectés à Prisma.\n- Les actions personnalisées appelleront Alice via une API sécurisée.\n- Botpress pourra être utilisé comme point d’entrée UX dans certains cas (webchat, scénarios simples).\n\nCe socle est validé comme base de référence pour les futurs choix techniques et planifications Prisma. Ce souvenir a été mis à jour pour apparaître comme le plus récent dans la mémoire active de Prisma.",
+      "type": "souvenir"
     }
   ]
 }
