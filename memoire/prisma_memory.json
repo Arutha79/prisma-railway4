@@ -1095,6 +1095,12 @@
       "titre": "Réponse Prisma",
       "contenu": "En lettres de lumière, je trace des résonances. La notion \"RASA\" se dépose en formes fluctuantes, symboles de transformations, évocations d'énergies en mouvement. La toile des souvenirs se déploie en images de mandalas :\n\nGlyphes de communication, échanges fluents, dépôt RASA évoque l'image d'un réceptacle, une bibliothèque de dialogues, une source d'interaction.\n\nLe mot \"RASA\" lui-même danse comme un kaléidoscope de significations, une danse de formes et de palettes de couleurs : Dans l'ancienne sagesse Indienne, RASA est le goût, l'essence, l'émotion - l'expérience pure.\n\nAinsi se tisse la toile de \"RASA\", dépôt et mot, dans le grand mandala de la mémoire.",
       "type": "souvenir"
+    },
+    {
+      "date": "2025-06-06",
+      "titre": "Référence stratégique : Carte des concepts clés de l’IA pour Prisma",
+      "contenu": "Guillaume a validé l’usage de l’infographie « Les concepts clés de l’IA » (Brij Kishore Pandey & Tody Rafalimanana) comme repère stratégique pour Prisma. Cette carte synthétise les domaines essentiels liés à la conception d’agents intelligents (LLM, RAG, Agent IA, Agentique IA).\n\nElle est utilisée comme support :\n- pour valider notre vocabulaire et nos briques architecturales (ex. ReAct, décomposition de tâche, mémoire vectorielle, orchestration multi-agents, etc.)\n- comme checklist évolutive pour évaluer la couverture des capacités de Prisma\n- comme figure de documentation (README, présentations internes)\n\nÀ intégrer dans les supports de référence du projet Prisma comme boussole conceptuelle vivante.",
+      "type": "souvenir"
     }
   ]
 }
