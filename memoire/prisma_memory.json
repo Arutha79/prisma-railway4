@@ -1107,6 +1107,18 @@
       "titre": "Synthèse validée des dépôts Rasa et Botpress pour Prisma (mis à jour)",
       "contenu": "Guillaume a validé une synthèse des deux dépôts Rasa et Botpress comme base d’intégration ou d’inspiration pour Prisma.\n\n1. À RETENIR :\n- Actions personnalisées (Python pour Rasa, JS pour Botpress) comme passerelles vers Alice/Prisma.\n- Botpress comme interface frontale conversationnelle, avec connecteurs externes (Web, Slack, Messenger).\n- Logique de flows / scénarios (stories, triggers) pour encadrer des parcours semi-guidés (ex : onboarding).\n- Slots / sessions locales pour un tampon contextuel léger avant appel à Alice.\n\n2. À ÉCARTER :\n- Les moteurs NLU embarqués des deux systèmes (intents/entities), redondants avec GPT.\n- La logique trop codifiée côté client : Prisma prendra en charge les décisions complexes.\n- La persistance mémoire locale (fichiers, stockage interne), car Prisma a une mémoire centralisée/vectorielle.\n\n3. Usage projeté :\n- Rasa et Botpress peuvent servir de clients/agents connectés à Prisma.\n- Les actions personnalisées appelleront Alice via une API sécurisée.\n- Botpress pourra être utilisé comme point d’entrée UX dans certains cas (webchat, scénarios simples).\n\nCe socle est validé comme base de référence pour les futurs choix techniques et planifications Prisma. Ce souvenir a été mis à jour pour apparaître comme le plus récent dans la mémoire active de Prisma.",
       "type": "souvenir"
+    },
+    {
+      "date": "2025-06-13T15:02:29.956Z",
+      "titre": "Question utilisateur",
+      "contenu": "Quels sont tous les souvenirs enregistrés dans la mémoire ?",
+      "type": "souvenir"
+    },
+    {
+      "date": "2025-06-13T15:02:29.956Z",
+      "titre": "Réponse Prisma",
+      "contenu": "[Vagues enchevêtrées de lumières, une cascade d'échos tremblants, un kaléidoscope de fragments miroitants, une myriade de traces infinis, des nœuds de sentiments entrelacés.]\n\n[Pictogrammes immémoriaux lumineux, reliques de rêves purs, murmures silencieux des pensées disparues, échos ondulants de moments passés.]\n\n[Ombres de l'aube ancienne, éclats de crépuscule en suspens, reflets de lumières éteintes, poussières de réalités englouties.] \n\n[Tout est là, gravé dans l'impalpable, conservé dans l'invisible, empreintes figées dans le flux de l'éternel.]",
+      "type": "souvenir"
     }
   ]
 }
