@@ -1,10 +1,9 @@
-// memoire.js corrigé avec intégration du logger secondaire interaction_history.json
 const fs = require("fs");
 const path = require("path");
 
 const MEMOIRE_PATH = path.resolve("memoire/prisma_memory.json");
 const LOG_PATH = path.resolve("memoire/log_souvenirs.txt");
-const { ajouterInteraction } = require("./ajouterInteraction");
+const HISTORY_PATH = path.resolve("interaction_history.json");
 
 function chargerMemoire() {
   if (!fs.existsSync(MEMOIRE_PATH)) return { historique: [] };
@@ -26,6 +25,38 @@ function sauvegarderMemoire(data) {
     fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), "utf-8");
   } catch (err) {
     console.error("❌ Erreur sauvegarde memoire:", err.message);
+  }
+}
+
+function ajouterDansHistorique(bloc) {
+  try {
+    if (!fs.existsSync(HISTORY_PATH)) {
+      fs.writeFileSync(HISTORY_PATH, "[]", "utf-8");
+    }
+    const raw = fs.readFileSync(HISTORY_PATH, "utf-8");
+    let historique = [];
+    try {
+      historique = JSON.parse(raw);
+      if (!Array.isArray(historique)) throw new Error();
+    } catch {
+      console.warn("⚠️ Format invalide dans interaction_history.json. Réinitialisation.");
+      historique = [];
+    }
+    const existe = historique.some(
+      (e) => e.titre === bloc.titre && e.contenu === bloc.contenu
+    );
+    if (!existe) {
+      historique.push({
+        date: bloc.date,
+        titre: bloc.titre,
+        contenu: bloc.contenu,
+        type: bloc.type || "souvenir"
+      });
+      fs.writeFileSync(HISTORY_PATH, JSON.stringify(historique, null, 2), "utf-8");
+      console.log("📝 Interaction secondaire enregistrée.");
+    }
+  } catch (err) {
+    console.error("❌ Erreur ajout interaction_history:", err.message);
   }
 }
 
@@ -60,11 +91,11 @@ async function ajouterSouvenir(souvenir) {
 
       data.historique.push(bloc);
       sauvegarderMemoire(data);
-      ajouterInteraction(bloc); // 🔁 Ajout dans interaction_history.json
 
       const log = `🧠 ${bloc.date} — ${bloc.titre}\n${bloc.contenu}\n\n`;
       fs.appendFileSync(LOG_PATH, log, "utf-8");
 
+      ajouterDansHistorique(bloc);
       console.log("✅ Souvenir ajouté :", JSON.stringify(bloc, null, 2));
     } else {
       console.log("⚠️ Souvenir déjà présent, rien ajouté.");
@@ -83,7 +114,6 @@ function appliquerRegleMemoireActive(question) {
     console.log("📌 Réponse appliquée :", regle.action);
     return regle.action;
   }
-
   return null;
 }
 
