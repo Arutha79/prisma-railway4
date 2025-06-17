@@ -10,15 +10,23 @@ function chargerMemoire() {
     return [];
   }
   const raw = fs.readFileSync(MEMORY_PATH, "utf-8");
-  return JSON.parse(raw);
+  const contenu = JSON.parse(raw);
+  if (Array.isArray(contenu)) {
+    return contenu;
+  } else if (typeof contenu === "object" && Array.isArray(contenu.historique)) {
+    return contenu.historique;
+  } else {
+    console.error("❌ Format de mémoire non reconnu.");
+    return [];
+  }
 }
 
 function getAllSouffles() {
   return chargerMemoire().map((entry, index) => ({
     index,
-    date: entry.timestamp,
-    souffle: entry.souffle,
-    effet: entry.intent?.effect,
+    date: entry.timestamp || entry.date || "?",
+    souffle: entry.souffle || "—",
+    effet: entry.intent?.effect || "—"
   }));
 }
 
@@ -36,7 +44,7 @@ function rejouerSouffle(index) {
     console.warn("❌ Index invalide.");
     return null;
   }
-  return memoire[index].souffle;
+  return memoire[index].souffle || null;
 }
 
 module.exports = {
