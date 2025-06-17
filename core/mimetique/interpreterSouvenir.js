@@ -25,6 +25,11 @@ function interpreterSouvenir(bloc, options = {}) {
 
 function prismaSeRelit() {
   const souvenirs = getAllSouffles();
+  if (!Array.isArray(souvenirs)) {
+    console.warn("⚠️ Aucune mémoire valide à relire.");
+    return;
+  }
+
   console.log('\n📚 Prisma relit sa mémoire :');
   souvenirs.forEach((entry) => {
     console.log(`[${entry.index}] 🗓 ${entry.date} | 🌬️ ${entry.souffle} → 🛠️ ${entry.effet}`);
