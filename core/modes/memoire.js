@@ -1,4 +1,4 @@
-// memoire.js
+// memoire.js corrigé avec sécurisation complète de l'objet historique
 const fs = require("fs");
 const path = require("path");
 
@@ -9,9 +9,9 @@ function chargerMemoire() {
   if (!fs.existsSync(MEMOIRE_PATH)) return { historique: [] };
   try {
     const mem = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
-    if (!Array.isArray(mem.historique)) {
+    if (!mem || typeof mem !== "object" || !Array.isArray(mem.historique)) {
       console.warn("⚠️ Prisma : 'historique' manquant ou mal formé, initialisation forcée.");
-      mem.historique = [];
+      return { historique: [] };
     }
     return mem;
   } catch (err) {
@@ -36,7 +36,7 @@ async function ajouterSouvenir(souvenir) {
       console.log("🆕 Fichier memoire initialisé.");
     }
 
-    const data = chargerMemoire();
+    let data = chargerMemoire();
     if (!Array.isArray(data.historique)) {
       console.warn("⚠️ 'historique' absent ou non tableau, initialisation forcée.");
       data.historique = [];
