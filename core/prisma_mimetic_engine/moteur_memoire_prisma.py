@@ -9,17 +9,18 @@ LOG_PATH = os.path.join("mémoire", "log_souvenirs.txt")
 
 def charger_memoire():
     if not os.path.exists(MEMOIRE_PATH):
-        return {"historique": []}
+        return {"prisma_memory": {"historique": []}}
+
     try:
         with open(MEMOIRE_PATH, "r", encoding="utf-8") as f:
             data = json.load(f)
-        if not isinstance(data.get("historique", []), list):
+        if not isinstance(data.get("prisma_memory", {}).get("historique", []), list):
             print("⚠️ Prisma : 'historique' mal formé. Réinitialisation forcée.")
-            data["historique"] = []
+            data["prisma_memory"]["historique"] = []
         return data
     except Exception as e:
         print(f"❌ Erreur lecture mémoire : {e}")
-        return {"historique": []}
+        return {"prisma_memory": {"historique": []}}
 
 def sauvegarder_memoire(data):
     try:
@@ -38,7 +39,7 @@ def est_deja_present(contenu, historique):
 def ajouter_souvenir(souvenir):
     os.makedirs(os.path.dirname(MEMOIRE_PATH), exist_ok=True)
     memoire = charger_memoire()
-    historique = memoire.get("historique", [])
+    historique = memoire.get("prisma_memory", {}).get("historique", [])
 
     contenu_nettoye = nettoyer_reponse(souvenir.get("contenu", ""))
     if not contenu_nettoye or len(contenu_nettoye) < 10:
@@ -59,7 +60,7 @@ def ajouter_souvenir(souvenir):
     }
 
     historique.append(bloc)
-    memoire["historique"] = historique
+    memoire["prisma_memory"]["historique"] = historique
     sauvegarder_memoire(memoire)
 
     with open(LOG_PATH, "a", encoding="utf-8") as log_file:
