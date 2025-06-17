@@ -18,6 +18,10 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// 📌 Import de l'API Alice (/api/interact)
+const interactRoute = require("./api/interact");
+app.use("/api", interactRoute);
+
 const MEMOIRE_PATH = path.resolve("memoire/prisma_memory.json");
 const ETAT_PATH = path.resolve("core/mimetique/etatPrisma.json");
 const GITHUB_REPO = "Arutha79/prisma-railway4";
