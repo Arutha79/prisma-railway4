@@ -1,9 +1,10 @@
-// memoire.js corrigé avec sécurisation complète de l'objet historique
+// memoire.js corrigé avec intégration du logger secondaire interaction_history.json
 const fs = require("fs");
 const path = require("path");
 
 const MEMOIRE_PATH = path.resolve("memoire/prisma_memory.json");
 const LOG_PATH = path.resolve("memoire/log_souvenirs.txt");
+const { ajouterInteraction } = require("./ajouterInteraction");
 
 function chargerMemoire() {
   if (!fs.existsSync(MEMOIRE_PATH)) return { historique: [] };
@@ -59,6 +60,7 @@ async function ajouterSouvenir(souvenir) {
 
       data.historique.push(bloc);
       sauvegarderMemoire(data);
+      ajouterInteraction(bloc); // 🔁 Ajout dans interaction_history.json
 
       const log = `🧠 ${bloc.date} — ${bloc.titre}\n${bloc.contenu}\n\n`;
       fs.appendFileSync(LOG_PATH, log, "utf-8");
