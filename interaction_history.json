@@ -1,1 +1,22 @@
-[]
+const MEMORY_FILE = path.join(__dirname, 'interaction_history.json');
+
+let interactionHistory = [];
+
+function loadHistory() {
+    try {
+        const raw = fs.readFileSync(MEMORY_FILE, 'utf-8');
+        const data = JSON.parse(raw);
+
+        // 🛡️ Vérification que c’est bien un tableau
+        if (Array.isArray(data)) {
+            interactionHistory = data;
+        } else {
+            console.warn("⚠️ interactionHistory n’est pas un tableau. Réinitialisation en []");
+            interactionHistory = [];
+        }
+
+    } catch (error) {
+        console.error("❌ Erreur de lecture ou de parsing du fichier de mémoire :", error.message);
+        interactionHistory = []; // Valeur de secours
+    }
+}
