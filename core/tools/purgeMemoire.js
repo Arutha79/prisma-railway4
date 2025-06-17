@@ -11,9 +11,9 @@ function chargerMemoire() {
   if (!fs.existsSync(MEMOIRE_PATH)) return { historique: [] };
   try {
     const mem = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
-    if (!Array.isArray(mem.historique)) {
-      console.warn("⚠️ 'historique' invalide, réinitialisation.");
-      mem.historique = [];
+    if (!mem || typeof mem !== "object" || !Array.isArray(mem.historique)) {
+      console.warn("⚠️ 'historique' invalide ou manquant, initialisation forcée.");
+      return { historique: [] };
     }
     return mem;
   } catch (err) {
@@ -23,13 +23,17 @@ function chargerMemoire() {
 }
 
 function sauvegarderMemoire(data) {
-  fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), "utf-8");
+  try {
+    fs.writeFileSync(MEMOIRE_PATH, JSON.stringify(data, null, 2), "utf-8");
+  } catch (err) {
+    console.error("❌ Erreur sauvegarde mémoire:", err.message);
+  }
 }
 
 // Fonction de nettoyage avancé
 function purgerSouvenirsFigés() {
   const memoire = chargerMemoire();
-  const avant = memoire.historique.length;
+  const avant = Array.isArray(memoire.historique) ? memoire.historique.length : 0;
 
   const contenusUniques = new Set();
   const nettoyés = [];
@@ -70,7 +74,11 @@ function purgerSouvenirsFigés() {
   sauvegarderMemoire({ ...memoire, historique: filtrés });
 
   const log = `[${new Date().toISOString()}] Déracinement mimétique : ${supprimés} souvenir(s) supprimé(s)\n`;
-  fs.appendFileSync(LOG_PATH, log, "utf-8");
+  try {
+    fs.appendFileSync(LOG_PATH, log, "utf-8");
+  } catch (err) {
+    console.error("❌ Erreur écriture log:", err.message);
+  }
 
   console.log("✅ Souvenirs figés ou redondants nettoyés. Prisma peut maintenant respirer.");
   return supprimés;
