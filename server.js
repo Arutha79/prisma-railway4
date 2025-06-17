@@ -1,4 +1,4 @@
-// server.js corrigé avec validation de la mémoire
+// server.js corrigé avec validation de la mémoire et interaction_history.json
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -24,6 +24,7 @@ app.use("/api", interactRoute);
 
 const MEMOIRE_PATH = path.resolve("memoire/prisma_memory.json");
 const ETAT_PATH = path.resolve("core/mimetique/etatPrisma.json");
+const INTERACTION_HISTORY_PATH = path.resolve("interaction_history.json");
 const GITHUB_REPO = "Arutha79/prisma-railway4";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
@@ -42,6 +43,25 @@ if (!fs.existsSync(MEMOIRE_PATH)) {
     }, null, 2),
     "utf-8"
   );
+}
+
+// 💡 Validation et création de interaction_history.json
+if (!fs.existsSync(INTERACTION_HISTORY_PATH)) {
+  fs.writeFileSync(INTERACTION_HISTORY_PATH, "[]", "utf-8");
+}
+
+let interactionHistory;
+try {
+  interactionHistory = JSON.parse(fs.readFileSync(INTERACTION_HISTORY_PATH, "utf-8"));
+  if (!Array.isArray(interactionHistory)) {
+    console.warn("⚠️ interaction_history.json n'est pas un tableau. Réinitialisation.");
+    interactionHistory = [];
+    fs.writeFileSync(INTERACTION_HISTORY_PATH, "[]", "utf-8");
+  }
+} catch (err) {
+  console.error("❌ Erreur lors du chargement de interaction_history.json :", err.message);
+  interactionHistory = [];
+  fs.writeFileSync(INTERACTION_HISTORY_PATH, "[]", "utf-8");
 }
 
 function validerMemoire(memoire) {
