@@ -1,5 +1,3 @@
-const MEMORY_FILE = path.join(__dirname, 'interaction_history.json');
-
 let interactionHistory = [];
 
 function loadHistory() {
