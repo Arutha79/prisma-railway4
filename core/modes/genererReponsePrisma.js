@@ -1,3 +1,4 @@
+// genererReponsePrisma.js
 const fs = require("fs");
 const path = require("path");
 const { interpreterSouvenir } = require("../mimetique/interpretationMimetique");
@@ -10,7 +11,11 @@ async function genererReponsePrisma(question, moteurBase, options = {}) {
 
   if (!mode_creation) {
     try {
-      const memoire = JSON.parse(fs.readFileSync(path.resolve("memoire/prisma_memory.json"), "utf-8"));
+      const memoirePath = path.resolve("memoire/prisma_memory.json");
+      if (!fs.existsSync(memoirePath)) throw new Error("Fichier mémoire introuvable");
+      
+      const raw = fs.readFileSync(memoirePath, "utf-8");
+      const memoire = JSON.parse(raw);
 
       // ✅ APPLIQUER D'ABORD LES RÈGLES MÉMOIRE ACTIVES
       const reponseReglee = appliquerRegleMemoireActive(question);
@@ -19,6 +24,7 @@ async function genererReponsePrisma(question, moteurBase, options = {}) {
       // 🔁 PUIS INTERPRÉTER LES SOUVENIRS SI AUCUNE RÈGLE NE S'APPLIQUE
       if (Array.isArray(memoire.historique)) {
         for (const bloc of memoire.historique.slice().reverse()) {
+          if (!bloc || typeof bloc !== 'object') continue;
           const interpretation = interpreterSouvenir(bloc);
           if (interpretation) {
             return `${interpretation}\n\n🧠 Souvenir retrouvé du ${bloc.date} :\n"${bloc.contenu}"`;
