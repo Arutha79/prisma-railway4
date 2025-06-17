@@ -10,7 +10,8 @@ async function genererReponsePrisma(question, moteurBase, options = {}) {
 
   if (!mode_creation) {
     try {
-      const memoire = JSON.parse(fs.readFileSync(path.resolve("memoire/prisma_memory.json"), "utf-8"));
+      const raw = fs.readFileSync(path.resolve("memoire/prisma_memory.json"), "utf-8");
+      const memoire = JSON.parse(raw);
 
       // ✅ APPLIQUER D'ABORD LES RÈGLES MÉMOIRE ACTIVES
       const reponseReglee = appliquerRegleMemoireActive(question);
