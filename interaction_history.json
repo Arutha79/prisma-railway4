@@ -1,20 +1,54 @@
-let interactionHistory = [];
+// interaction_memory.js
+const fs = require('fs');
+const path = require('path');
 
-function loadHistory() {
+// 📁 Chemin vers le fichier JSON
+const MEMORY_FILE = path.join(__dirname, 'interaction_history.json');
+
+// 📦 Chargement sécurisé
+function loadInteractionHistory() {
     try {
         const raw = fs.readFileSync(MEMORY_FILE, 'utf-8');
         const data = JSON.parse(raw);
-
-        // 🛡️ Vérification que c’est bien un tableau
         if (Array.isArray(data)) {
-            interactionHistory = data;
+            return data;
         } else {
-            console.warn("⚠️ interactionHistory n’est pas un tableau. Réinitialisation en []");
-            interactionHistory = [];
+            console.warn("⚠️ Fichier JSON trouvé mais ce n’est pas un tableau. Réinitialisation.");
+            return [];
         }
-
-    } catch (error) {
-        console.error("❌ Erreur de lecture ou de parsing du fichier de mémoire :", error.message);
-        interactionHistory = []; // Valeur de secours
+    } catch (err) {
+        console.warn("⚠️ Fichier manquant ou illisible. Création d’un tableau vide.");
+        return [];
     }
+}
+
+// 💾 Sauvegarde sécurisée
+function saveInteractionHistory(history) {
+    try {
+        fs.writeFileSync(MEMORY_FILE, JSON.stringify(history, null, 2), 'utf-8');
+        console.log("✅ Mémoire enregistrée avec succès.");
+    } catch (err) {
+        console.error("❌ Échec de la sauvegarde :", err.message);
+    }
+}
+
+// ➕ Ajouter une interaction
+function addInteraction(entry) {
+    const history = loadInteractionHistory();
+    history.push({
+        ...entry,
+        date: new Date().toISOString()
+    });
+    saveInteractionHistory(history);
+}
+
+// 🧪 Exemple d’utilisation
+if (require.main === module) {
+    const newEntry = {
+        prompt: "Quel est le sens de la vie ?",
+        gpt_3_5: "42",
+        gpt_4: "42, mais avec nuance.",
+        coherence: "identique"
+    };
+    addInteraction(newEntry);
 }
