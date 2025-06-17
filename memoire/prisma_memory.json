@@ -1261,6 +1261,12 @@
       "titre": "Question utilisateur",
       "contenu": "Qui es-tu ?",
       "type": "souvenir"
+    },
+    {
+      "date": "2025-06-17T13:25:25.714Z",
+      "titre": "Question utilisateur",
+      "contenu": "Est-ce que le souvenir du 2025-05-20 avec les glyphes ☼∆∇ bloque Prisma dans sa réponse à 'Qui es-tu ?'",
+      "type": "souvenir"
     }
   ]
 }
