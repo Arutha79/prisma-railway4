@@ -1,4 +1,4 @@
-// server.js corrigé
+// server.js corrigé avec validation de la mémoire
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -38,6 +38,14 @@ if (!fs.existsSync(MEMOIRE_PATH)) {
     }, null, 2),
     "utf-8"
   );
+}
+
+function validerMemoire(memoire) {
+  if (!memoire.historique || !Array.isArray(memoire.historique)) {
+    console.warn("⚠️ Mémoire invalide ou corrompue. Réinitialisation de 'historique'.");
+    memoire.historique = [];
+  }
+  return memoire;
 }
 
 async function syncGithubMemoire() {
@@ -84,7 +92,8 @@ async function syncGithubMemoire() {
 
 app.get("/ping-memoire", (req, res) => {
   try {
-    const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
+    let memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
+    memoire = validerMemoire(memoire);
     res.json({
       status: "ok",
       total: memoire.historique.length,
