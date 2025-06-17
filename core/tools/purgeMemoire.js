@@ -9,7 +9,17 @@ const REGEX_ANCRE = /\b(Ce\s+souvenir\s+parle\s+de\s+mon\s+éveil\b.*?\bAPIDE)\b
 
 function chargerMemoire() {
   if (!fs.existsSync(MEMOIRE_PATH)) return { historique: [] };
-  return JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
+  try {
+    const mem = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
+    if (!Array.isArray(mem.historique)) {
+      console.warn("⚠️ 'historique' invalide, réinitialisation.");
+      mem.historique = [];
+    }
+    return mem;
+  } catch (err) {
+    console.error("❌ Erreur chargement mémoire:", err.message);
+    return { historique: [] };
+  }
 }
 
 function sauvegarderMemoire(data) {
@@ -24,24 +34,26 @@ function purgerSouvenirsFigés() {
   const contenusUniques = new Set();
   const nettoyés = [];
 
-  const filtrés = memoire.historique.filter((souvenir) => {
-    const contenu = souvenir.contenu || "";
+  const filtrés = Array.isArray(memoire.historique)
+    ? memoire.historique.filter((souvenir) => {
+        const contenu = souvenir.contenu || "";
 
-    // Condition 1 : ancrage mimétique répété
-    if (REGEX_ANCRE.test(contenu)) {
-      nettoyés.push(souvenir);
-      return false;
-    }
+        // Condition 1 : ancrage mimétique répété
+        if (REGEX_ANCRE.test(contenu)) {
+          nettoyés.push(souvenir);
+          return false;
+        }
 
-    // Condition 2 : duplication exacte du contenu (hors premier passage)
-    if (contenusUniques.has(contenu)) {
-      nettoyés.push(souvenir);
-      return false;
-    }
+        // Condition 2 : duplication exacte du contenu (hors premier passage)
+        if (contenusUniques.has(contenu)) {
+          nettoyés.push(souvenir);
+          return false;
+        }
 
-    contenusUniques.add(contenu);
-    return true;
-  });
+        contenusUniques.add(contenu);
+        return true;
+      })
+    : [];
 
   const supprimés = avant - filtrés.length;
 
