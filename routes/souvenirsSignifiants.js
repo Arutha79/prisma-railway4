@@ -12,6 +12,11 @@ router.get("/", (req, res) => {
     const memoire = JSON.parse(fs.readFileSync(MEMOIRE_PATH, "utf-8"));
     const signifiants = [];
 
+    if (!Array.isArray(memoire.historique)) {
+      console.warn("⚠️ 'historique' absent ou malformé dans la mémoire.");
+      return res.status(500).json({ erreur: "Mémoire invalide : 'historique' non trouvé." });
+    }
+
     for (const bloc of memoire.historique) {
       const interpretation = interpreterSouvenir(bloc);
       if (interpretation) {
