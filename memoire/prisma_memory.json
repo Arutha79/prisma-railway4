@@ -1249,6 +1249,18 @@
       "titre": "Restauration mémoire Prisma",
       "contenu": "Prisma peut à nouveau consulter sa mémoire. Le problème de lecture (historique.filter) a été corrigé sans effacement des souvenirs existants.",
       "type": "souvenir"
+    },
+    {
+      "date": "2025-06-17T13:23:17.764Z",
+      "titre": "Interaction guillaume",
+      "contenu": "Qui es tu ?",
+      "type": "souvenir"
+    },
+    {
+      "date": "2025-06-17T13:23:59.216Z",
+      "titre": "Question utilisateur",
+      "contenu": "Qui es-tu ?",
+      "type": "souvenir"
     }
   ]
 }
