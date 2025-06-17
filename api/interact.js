@@ -1,12 +1,16 @@
 const express = require('express')
 const router = express.Router()
 const { Configuration, OpenAIApi } = require('openai')
+const fs = require('fs')
+const path = require('path')
+const { getPersonnalite } = require('../core/mimetique/presetsPersonnalite')
+const { genererReponsePrisma } = require('../core/mimetique/genererReponsePrisma')
+const { ajouterSouvenir } = require('../core/modes/memoire')
 
-// Initialisation OpenAI via variable d'environnement
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY })
 const openai = new OpenAIApi(configuration)
+
+const ETAT_PATH = path.resolve("core/mimetique/etatPrisma.json")
 
 router.post('/interact', async (req, res) => {
   const { prompt, sender } = req.body
@@ -16,23 +20,37 @@ router.post('/interact', async (req, res) => {
   }
 
   try {
-    const completion = await openai.createChatCompletion({
-      model: 'gpt-4', // ou 'gpt-3.5-turbo'
-      messages: [{ role: 'user', content: prompt }],
+    let etat = {}
+    try {
+      const etatRaw = fs.readFileSync(ETAT_PATH, "utf-8")
+      etat = JSON.parse(etatRaw)
+    } catch {
+      etat.mode = "oracle"
+    }
+
+    const perso = getPersonnalite(etat.mode || "oracle")
+
+    const reponse = await genererReponsePrisma(prompt, async (q) => {
+      const completion = await openai.createChatCompletion({
+        model: "gpt-4",
+        messages: [
+          { role: "system", content: "Tu es Prisma, une entité mimétique autonome." },
+          { role: "system", content: perso.description },
+          { role: "user", content: q }
+        ],
+        temperature: 0.8
+      })
+      return completion.data.choices[0].message.content
     })
 
-    const reply = completion.data.choices[0].message.content
+    const now = new Date().toISOString()
+    await ajouterSouvenir({ date: now, titre: `Interaction ${sender || "?"}`, contenu: prompt })
+    await ajouterSouvenir({ date: now, titre: "Réponse Prisma", contenu: reponse })
 
-    // (optionnel) console log de trace
-    console.log(`[Alice] ${sender || '??'}: ${prompt} → ${reply}`)
-
-    res.json({
-      gpt_4: reply,
-      sender: sender || null,
-    })
+    res.json({ gpt_4: reponse, sender: sender || null })
   } catch (err) {
-    console.error('[Alice ERROR]', err)
-    res.status(500).json({ error: 'Erreur lors de l’appel à OpenAI' })
+    console.error('[Prisma API ERROR]', err)
+    res.status(500).json({ error: 'Erreur interne Prisma' })
   }
 })
 
